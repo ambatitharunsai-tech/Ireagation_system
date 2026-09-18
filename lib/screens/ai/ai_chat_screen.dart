@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../providers/language_provider.dart';
 
 import '../../providers/farm_provider.dart';
 import '../../providers/finance_provider.dart';
@@ -120,28 +121,29 @@ class _AiChatScreenState extends State<AiChatScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final lang = Provider.of<LanguageProvider>(context);
     final iot = Provider.of<IoTProvider>(context);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Row(
+        title: Row(
           children: [
-            CircleAvatar(
+            const CircleAvatar(
               radius: 16,
               backgroundColor: Color(0xFF2E7D32),
               child: Icon(Icons.smart_toy, size: 18, color: Colors.white),
             ),
-            SizedBox(width: 10),
+            const SizedBox(width: 10),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'AI Agent',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  lang.t('Farm Assistant'),
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
                 Text(
-                  'Smart Agriculture Assistant',
-                  style: TextStyle(fontSize: 11, color: Colors.grey),
+                  lang.t('Smart Agriculture'),
+                  style: const TextStyle(fontSize: 11, color: Colors.grey),
                 ),
               ],
             ),
@@ -204,7 +206,7 @@ class _AiChatScreenState extends State<AiChatScreen> {
               itemCount: _messages.length + (_isLoading ? 1 : 0),
               itemBuilder: (ctx, i) {
                 if (i == _messages.length && _isLoading) {
-                  return _buildTypingIndicator();
+                  return _buildTypingIndicator(lang);
                 }
                 return _buildMessageBubble(_messages[i]);
               },
@@ -231,7 +233,7 @@ class _AiChatScreenState extends State<AiChatScreen> {
                     child: TextField(
                       controller: _msgCtrl,
                       decoration: InputDecoration(
-                        hintText: 'Ask about crops, sensors, irrigation...',
+                        hintText: lang.t('Ask a question about farming...'),
                         filled: true,
                         fillColor: Colors.grey.shade100,
                         border: OutlineInputBorder(
@@ -355,7 +357,7 @@ class _AiChatScreenState extends State<AiChatScreen> {
     );
   }
 
-  Widget _buildTypingIndicator() {
+  Widget _buildTypingIndicator(LanguageProvider lang) {
     return Align(
       alignment: Alignment.centerLeft,
       child: Container(
@@ -383,7 +385,7 @@ class _AiChatScreenState extends State<AiChatScreen> {
             ),
             const SizedBox(width: 10),
             Text(
-              ApiKeys.hasGeminiKey ? 'AI is analyzing...' : 'Thinking...',
+              ApiKeys.hasGeminiKey ? lang.t('AI is analyzing...') : lang.t('Thinking...'),
               style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
             ),
           ],

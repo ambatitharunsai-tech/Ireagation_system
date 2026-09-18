@@ -5,6 +5,7 @@ import '../../providers/auth_provider.dart';
 import '../../providers/farm_provider.dart';
 import '../../providers/finance_provider.dart';
 import '../../providers/iot_provider.dart';
+import '../../providers/language_provider.dart';
 import 'dashboard_screen.dart';
 import '../iot/iot_dashboard_screen.dart';
 import '../crops/crop_list_screen.dart';
@@ -45,6 +46,8 @@ class _MainLayoutState extends State<MainLayout> {
   Widget build(BuildContext context) {
     final iot = Provider.of<IoTProvider>(context);
 
+    final lang = Provider.of<LanguageProvider>(context);
+
     final pages = [
       const DashboardScreen(),
       const IoTDashboardScreen(),
@@ -60,10 +63,10 @@ class _MainLayoutState extends State<MainLayout> {
         onDestinationSelected: (idx) => setState(() => _currentIndex = idx),
         labelBehavior: NavigationDestinationLabelBehavior.onlyShowSelected,
         destinations: [
-          const NavigationDestination(
-            icon: Icon(Icons.dashboard_outlined),
-            selectedIcon: Icon(Icons.dashboard),
-            label: 'Dashboard',
+          NavigationDestination(
+            icon: const Icon(Icons.dashboard_outlined),
+            selectedIcon: const Icon(Icons.dashboard),
+            label: lang.t('Dashboard'),
           ),
           NavigationDestination(
             icon: Badge(
@@ -76,22 +79,22 @@ class _MainLayoutState extends State<MainLayout> {
               label: Text('${iot.unreadAlertCount}'),
               child: const Icon(Icons.sensors),
             ),
-            label: 'IoT',
+            label: lang.t('IoT'), // Keep IoT as IoT or add translation if needed
           ),
-          const NavigationDestination(
-            icon: Icon(Icons.grass_outlined),
-            selectedIcon: Icon(Icons.grass),
-            label: 'Crops',
+          NavigationDestination(
+            icon: const Icon(Icons.grass_outlined),
+            selectedIcon: const Icon(Icons.grass),
+            label: lang.t('Crops'),
           ),
-          const NavigationDestination(
-            icon: Icon(Icons.account_balance_wallet_outlined),
-            selectedIcon: Icon(Icons.account_balance_wallet),
-            label: 'Finance',
+          NavigationDestination(
+            icon: const Icon(Icons.account_balance_wallet_outlined),
+            selectedIcon: const Icon(Icons.account_balance_wallet),
+            label: lang.t('Finance'),
           ),
-          const NavigationDestination(
-            icon: Icon(Icons.menu_outlined),
-            selectedIcon: Icon(Icons.menu),
-            label: 'More',
+          NavigationDestination(
+            icon: const Icon(Icons.menu_outlined),
+            selectedIcon: const Icon(Icons.menu),
+            label: lang.t('More'),
           ),
         ],
       ),

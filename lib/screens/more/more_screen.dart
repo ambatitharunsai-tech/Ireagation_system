@@ -3,20 +3,28 @@ import 'package:provider/provider.dart';
 
 import '../../providers/auth_provider.dart';
 import '../../providers/iot_provider.dart';
-import '../../config/api_keys.dart';
+import '../../providers/language_provider.dart';
 import '../tasks/task_screen.dart';
 import '../ai/ai_chat_screen.dart';
 
-class MoreScreen extends StatelessWidget {
+class MoreScreen extends StatefulWidget {
   const MoreScreen({super.key});
 
+  @override
+  State<MoreScreen> createState() => _MoreScreenState();
+}
+
+class _MoreScreenState extends State<MoreScreen> {
   @override
   Widget build(BuildContext context) {
     final user = Provider.of<AuthProvider>(context).currentUser;
     final iot = Provider.of<IoTProvider>(context);
+    final langProvider = Provider.of<LanguageProvider>(context);
+    
+    String t(String key) => langProvider.t(key);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('More')),
+      appBar: AppBar(title: Text(t('More'))),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -43,7 +51,7 @@ class MoreScreen extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        user?.name ?? 'Farmer',
+                        user?.name ?? t('Farmer'),
                         style: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
@@ -71,9 +79,9 @@ class MoreScreen extends StatelessWidget {
           const SizedBox(height: 20),
 
           // Features section
-          const Text(
-            'Features',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          Text(
+            t('Features'),
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
 
@@ -81,8 +89,8 @@ class MoreScreen extends StatelessWidget {
             context,
             icon: Icons.task_alt,
             color: Colors.orange,
-            title: 'Farm Tasks',
-            subtitle: 'Manage planting, watering & harvest tasks',
+            title: t('Farm Tasks'),
+            subtitle: t('Manage tasks'),
             onTap: () => Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const TaskScreen()),
@@ -93,8 +101,8 @@ class MoreScreen extends StatelessWidget {
             context,
             icon: Icons.smart_toy,
             color: Colors.green,
-            title: 'AI Assistant',
-            subtitle: 'Get smart farming advice',
+            title: t('AI Assistant'),
+            subtitle: t('Get advice'),
             onTap: () => Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const AiChatScreen()),
@@ -105,11 +113,10 @@ class MoreScreen extends StatelessWidget {
             context,
             icon: Icons.notifications_outlined,
             color: Colors.red,
-            title: 'Alerts',
-            subtitle: '${iot.unreadAlertCount} unread alerts',
+            title: t('Alerts'),
+            subtitle: '${iot.unreadAlertCount} ${t('unread alerts')}',
             badge: iot.unreadAlertCount > 0 ? '${iot.unreadAlertCount}' : null,
             onTap: () {
-              // Navigate to IoT tab alerts
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
                   content: Text('View alerts from the IoT tab → 🔔 icon'),
@@ -121,9 +128,9 @@ class MoreScreen extends StatelessWidget {
           const SizedBox(height: 20),
 
           // Settings section
-          const Text(
-            'Settings',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          Text(
+            t('Settings'),
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
 
@@ -131,46 +138,17 @@ class MoreScreen extends StatelessWidget {
             context,
             icon: Icons.language,
             color: Colors.blue,
-            title: 'Language',
-            subtitle: 'English',
-            onTap: () {},
-          ),
-
-          _buildTile(
-            context,
-            icon: Icons.dark_mode_outlined,
-            color: Colors.indigo,
-            title: 'Appearance',
-            subtitle: 'Light mode',
-            onTap: () {},
-          ),
-
-          _buildTile(
-            context,
-            icon: Icons.key,
-            color: Colors.deepPurple,
-            title: 'API Keys',
-            subtitle: ApiKeys.hasGeminiKey
-                ? 'Gemini AI configured ✅'
-                : 'Configure Gemini AI key',
-            onTap: () => _showApiKeyDialog(context),
-          ),
-
-          _buildTile(
-            context,
-            icon: Icons.cloud_outlined,
-            color: Colors.teal,
-            title: 'Supabase Sync',
-            subtitle: 'Connected to cloud database',
-            onTap: () {},
+            title: t('Language'),
+            subtitle: langProvider.currentLanguage,
+            onTap: () => _showLanguageDialog(langProvider),
           ),
 
           _buildTile(
             context,
             icon: Icons.info_outline,
             color: Colors.grey,
-            title: 'About',
-            subtitle: 'Smart Agriculture v1.0.0',
+            title: t('About'),
+            subtitle: t('Smart Agriculture'),
             onTap: () => showAboutDialog(
               context: context,
               applicationName: 'Smart Agriculture',
@@ -190,8 +168,8 @@ class MoreScreen extends StatelessWidget {
             context,
             icon: Icons.logout,
             color: Colors.red,
-            title: 'Logout',
-            subtitle: 'Sign out of your account',
+            title: t('Logout'),
+            subtitle: t('Sign out'),
             onTap: () {
               Provider.of<AuthProvider>(context, listen: false).logout();
             },
@@ -202,91 +180,35 @@ class MoreScreen extends StatelessWidget {
     );
   }
 
-  void _showApiKeyDialog(BuildContext context) {
-    final geminiCtrl = TextEditingController(text: ApiKeys.geminiKey);
-    final tsChannelCtrl = TextEditingController(
-      text: ApiKeys.thingSpeakChannelId,
-    );
-    final tsKeyCtrl = TextEditingController(text: ApiKeys.thingSpeakReadKey);
-
+  void _showLanguageDialog(LanguageProvider langProvider) {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('API Keys'),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Gemini AI',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                'Get free key at aistudio.google.com/apikey',
-                style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
-              ),
-              const SizedBox(height: 8),
-              TextField(
-                controller: geminiCtrl,
-                decoration: const InputDecoration(
-                  labelText: 'Gemini API Key',
-                  hintText: 'AIza...',
-                ),
-                obscureText: true,
-              ),
-              const SizedBox(height: 20),
-              const Text(
-                'ThingSpeak (Optional)',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                'Connect real IoT sensors from ThingSpeak',
-                style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
-              ),
-              const SizedBox(height: 8),
-              TextField(
-                controller: tsChannelCtrl,
-                decoration: const InputDecoration(
-                  labelText: 'Channel ID',
-                  hintText: '123456',
-                ),
-              ),
-              const SizedBox(height: 8),
-              TextField(
-                controller: tsKeyCtrl,
-                decoration: const InputDecoration(
-                  labelText: 'Read API Key',
-                  hintText: 'ABCD1234...',
-                ),
-                obscureText: true,
-              ),
-            ],
+        title: Text(langProvider.t('Select Language')),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: ListView.builder(
+            shrinkWrap: true,
+            itemCount: langProvider.supportedLanguages.length,
+            itemBuilder: (context, index) {
+              final lang = langProvider.supportedLanguages[index];
+              return ListTile(
+                title: Text(lang),
+                trailing: langProvider.currentLanguage == lang
+                    ? const Icon(Icons.check, color: Colors.blue)
+                    : null,
+                onTap: () {
+                  langProvider.setLanguage(lang);
+                  Navigator.pop(ctx);
+                },
+              );
+            },
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () {
-              ApiKeys.setGeminiKey(geminiCtrl.text);
-              ApiKeys.setThingSpeakKeys(tsChannelCtrl.text, tsKeyCtrl.text);
-              Navigator.pop(ctx);
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(
-                    ApiKeys.hasGeminiKey
-                        ? '✅ Gemini AI key saved!'
-                        : 'Keys cleared. Using offline mode.',
-                  ),
-                ),
-              );
-            },
-            child: const Text('Save'),
+            child: Text(langProvider.t('Cancel')),
           ),
         ],
       ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../providers/language_provider.dart';
 import 'package:intl/intl.dart';
 
 import '../../providers/finance_provider.dart';
@@ -11,18 +12,19 @@ class FinanceScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final lang = Provider.of<LanguageProvider>(context);
     final finance = Provider.of<FinanceProvider>(context);
 
     return DefaultTabController(
       length: 3,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Farm Finances'),
-          bottom: const TabBar(
+          title: Text(lang.t('Farm Finances')),
+          bottom: TabBar(
             tabs: [
-              Tab(icon: Icon(Icons.money_off), text: 'Expenses'),
-              Tab(icon: Icon(Icons.attach_money), text: 'Sales'),
-              Tab(icon: Icon(Icons.science), text: 'Fertilizers'),
+              Tab(icon: const Icon(Icons.money_off), text: lang.t('Expenses')),
+              Tab(icon: const Icon(Icons.attach_money), text: lang.t('Sales')),
+              Tab(icon: const Icon(Icons.science), text: lang.t('Fertilizers')),
             ],
           ),
         ),
@@ -34,21 +36,21 @@ class FinanceScreen extends StatelessWidget {
               child: Row(
                 children: [
                   _buildSummaryCard(
-                    'Expenses',
+                    lang.t('Expenses'),
                     finance.totalExpenses,
                     Colors.red,
                     Icons.trending_down,
                   ),
                   const SizedBox(width: 12),
                   _buildSummaryCard(
-                    'Revenue',
+                    lang.t('Revenue'),
                     finance.totalRevenue,
                     Colors.green,
                     Icons.trending_up,
                   ),
                   const SizedBox(width: 12),
                   _buildSummaryCard(
-                    'Profit',
+                    lang.t('Profit'),
                     finance.profit,
                     finance.profit >= 0 ? Colors.green : Colors.red,
                     finance.profit >= 0 ? Icons.thumb_up : Icons.thumb_down,
@@ -61,9 +63,9 @@ class FinanceScreen extends StatelessWidget {
             Expanded(
               child: TabBarView(
                 children: [
-                  _buildExpenseTab(context, finance),
-                  _buildSalesTab(context, finance),
-                  _buildFertilizerTab(context, finance),
+                  _buildExpenseTab(context, finance, lang),
+                  _buildSalesTab(context, finance, lang),
+                  _buildFertilizerTab(context, finance, lang),
                 ],
               ),
             ),
@@ -72,7 +74,7 @@ class FinanceScreen extends StatelessWidget {
         floatingActionButton: FloatingActionButton.extended(
           onPressed: () => _showAddDialog(context),
           icon: const Icon(Icons.add),
-          label: const Text('Add Entry'),
+          label: Text(lang.t('Add Entry')),
         ),
       ),
     );
@@ -114,7 +116,7 @@ class FinanceScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildExpenseTab(BuildContext context, FinanceProvider finance) {
+  Widget _buildExpenseTab(BuildContext context, FinanceProvider finance, LanguageProvider lang) {
     if (finance.expenses.isEmpty) {
       return Center(
         child: Column(
@@ -123,7 +125,7 @@ class FinanceScreen extends StatelessWidget {
             Icon(Icons.receipt_long, size: 64, color: Colors.grey.shade300),
             const SizedBox(height: 12),
             Text(
-              'No expenses recorded',
+              lang.t('No expenses recorded'),
               style: TextStyle(color: Colors.grey.shade500),
             ),
           ],
@@ -158,7 +160,7 @@ class FinanceScreen extends StatelessWidget {
                 ),
               ),
               title: Text(
-                exp.category,
+                lang.t(exp.category),
                 style: const TextStyle(fontWeight: FontWeight.w600),
               ),
               subtitle: Text(
@@ -180,7 +182,7 @@ class FinanceScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildSalesTab(BuildContext context, FinanceProvider finance) {
+  Widget _buildSalesTab(BuildContext context, FinanceProvider finance, LanguageProvider lang) {
     if (finance.sales.isEmpty) {
       return Center(
         child: Column(
@@ -189,7 +191,7 @@ class FinanceScreen extends StatelessWidget {
             Icon(Icons.storefront, size: 64, color: Colors.grey.shade300),
             const SizedBox(height: 12),
             Text(
-              'No sales recorded',
+              lang.t('No sales recorded'),
               style: TextStyle(color: Colors.grey.shade500),
             ),
           ],
@@ -211,11 +213,11 @@ class FinanceScreen extends StatelessWidget {
               child: const Icon(Icons.sell, color: Colors.green, size: 20),
             ),
             title: Text(
-              sale.buyer ?? 'Sale',
+              sale.buyer ?? lang.t('Sale'),
               style: const TextStyle(fontWeight: FontWeight.w600),
             ),
             subtitle: Text(
-              '${sale.quantity} units × \$${sale.price.toStringAsFixed(2)} • ${sale.date}',
+              '${sale.quantity} ${lang.t('units')} × \$${sale.price.toStringAsFixed(2)} • ${sale.date}',
               style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
             ),
             trailing: Text(
@@ -232,7 +234,7 @@ class FinanceScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildFertilizerTab(BuildContext context, FinanceProvider finance) {
+  Widget _buildFertilizerTab(BuildContext context, FinanceProvider finance, LanguageProvider lang) {
     final fertilizerExpenses = finance.expenses
         .where((e) => e.category.toLowerCase().contains('fertilizer'))
         .toList();
@@ -253,7 +255,7 @@ class FinanceScreen extends StatelessWidget {
                 );
               },
               icon: const Icon(Icons.shopping_cart),
-              label: const Text('Order Fertilizers'),
+              label: Text(lang.t('Order Fertilizers')),
               style: FilledButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(
@@ -272,7 +274,7 @@ class FinanceScreen extends StatelessWidget {
                   Icon(Icons.science, size: 64, color: Colors.grey.shade300),
                   const SizedBox(height: 12),
                   Text(
-                    'No fertilizer expenses recorded',
+                    lang.t('No fertilizer expenses recorded'),
                     style: TextStyle(color: Colors.grey.shade500),
                   ),
                 ],
@@ -308,7 +310,7 @@ class FinanceScreen extends StatelessWidget {
                         ),
                       ),
                       title: Text(
-                        exp.category,
+                        lang.t(exp.category),
                         style: const TextStyle(fontWeight: FontWeight.w600),
                       ),
                       subtitle: Text(

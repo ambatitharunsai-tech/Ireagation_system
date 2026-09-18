@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../providers/iot_provider.dart';
 import '../../providers/farm_provider.dart';
+import '../../providers/language_provider.dart';
 import '../../services/iot_service.dart';
 
 class IoTDashboardScreen extends StatelessWidget {
@@ -11,17 +12,18 @@ class IoTDashboardScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final iot = Provider.of<IoTProvider>(context);
+    final lang = Provider.of<LanguageProvider>(context);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('IoT Devices'),
+        title: Text(lang.t('IoT Devices')),
         actions: [
           Stack(
             alignment: Alignment.center,
             children: [
               IconButton(
                 icon: const Icon(Icons.notifications_outlined),
-                onPressed: () => _showAlerts(context, iot),
+                onPressed: () => _showAlerts(context, iot, lang),
               ),
               if (iot.unreadAlertCount > 0)
                 Positioned(
@@ -51,33 +53,33 @@ class IoTDashboardScreen extends StatelessWidget {
         padding: const EdgeInsets.all(16),
         children: [
           // Status bar
-          _buildStatusBar(iot),
+          _buildStatusBar(iot, lang),
           const SizedBox(height: 16),
 
           // AI Agent Card
-          _buildAiAgentCard(context, iot),
+          _buildAiAgentCard(context, iot, lang),
           const SizedBox(height: 16),
 
           // Auto irrigation card
-          _buildAutoIrrigationCard(context, iot),
+          _buildAutoIrrigationCard(context, iot, lang),
           const SizedBox(height: 20),
 
           // Sensors section
-          const Text(
-            '📡 Sensors',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          Text(
+            lang.t('📡 Sensors'),
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 12),
-          ...iot.sensors.map((d) => _buildSensorCard(context, d, iot)),
+          ...iot.sensors.map((d) => _buildSensorCard(context, d, iot, lang)),
           const SizedBox(height: 20),
 
           // Actuators section
-          const Text(
-            '⚡ Pumps & Valves',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          Text(
+            lang.t('⚡ Pumps & Valves'),
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 12),
-          ...iot.actuators.map((d) => _buildActuatorCard(d, iot)),
+          ...iot.actuators.map((d) => _buildActuatorCard(d, iot, lang)),
           const SizedBox(height: 20),
 
           // AI Agent Logs
@@ -85,18 +87,18 @@ class IoTDashboardScreen extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
-                  '🤖 AI Agent Log',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                Text(
+                  lang.t('🤖 AI Agent Log'),
+                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 TextButton(
                   onPressed: () => iot.aiAgent.clearLogs(),
-                  child: const Text('Clear'),
+                  child: Text(lang.t('Clear')),
                 ),
               ],
             ),
             const SizedBox(height: 8),
-            ...iot.aiLogs.take(10).map((log) => _buildLogTile(log)),
+            ...iot.aiLogs.take(10).map((log) => _buildLogTile(log, lang)),
           ],
           const SizedBox(height: 80),
         ],
@@ -104,7 +106,7 @@ class IoTDashboardScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildAiAgentCard(BuildContext context, IoTProvider iot) {
+  Widget _buildAiAgentCard(BuildContext context, IoTProvider iot, LanguageProvider lang) {
     return Card(
       color: iot.isAiAgentActive
           ? Colors.deepPurple.shade50
@@ -136,17 +138,17 @@ class IoTDashboardScreen extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        'AI Agent',
-                        style: TextStyle(
+                      Text(
+                        lang.t('AI Agent'),
+                        style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                       Text(
                         iot.isAiAgentActive
-                            ? 'Monitoring sensors & managing irrigation'
-                            : 'Tap to enable AI-powered farm management',
+                            ? lang.t('Monitoring sensors & managing irrigation')
+                            : lang.t('Tap to enable AI-powered farm management'),
                         style: TextStyle(
                           fontSize: 12,
                           color: Colors.grey.shade600,
@@ -206,9 +208,9 @@ class IoTDashboardScreen extends StatelessWidget {
                     await iot.runAiEvaluationWithContext(crops);
                   },
                   icon: const Icon(Icons.refresh, size: 16),
-                  label: const Text(
-                    'Evaluate Now',
-                    style: TextStyle(fontSize: 13),
+                  label: Text(
+                    lang.t('Evaluate Now'),
+                    style: const TextStyle(fontSize: 13),
                   ),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: Colors.deepPurple,
@@ -222,7 +224,7 @@ class IoTDashboardScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildLogTile(dynamic log) {
+  Widget _buildLogTile(dynamic log, LanguageProvider lang) {
     final color = log.type == 'action'
         ? Colors.blue
         : log.type == 'error'
@@ -257,7 +259,7 @@ class IoTDashboardScreen extends StatelessWidget {
             ),
           ),
           Text(
-            _timeAgo(log.timestamp),
+            _timeAgo(log.timestamp, lang),
             style: TextStyle(fontSize: 10, color: Colors.grey.shade400),
           ),
         ],
@@ -265,26 +267,26 @@ class IoTDashboardScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildStatusBar(IoTProvider iot) {
+  Widget _buildStatusBar(IoTProvider iot, LanguageProvider lang) {
     return Row(
       children: [
         _buildStatusChip(
           '${iot.onlineCount}/${iot.devices.length}',
-          'Online',
+          lang.t('Online'),
           Icons.sensors,
           Colors.green,
         ),
         const SizedBox(width: 12),
         _buildStatusChip(
           '${iot.actuators.where((d) => d.isActive).length}',
-          'Active',
+          lang.t('Active'),
           Icons.power,
           Colors.blue,
         ),
         const SizedBox(width: 12),
         _buildStatusChip(
           '${iot.unreadAlertCount}',
-          'Alerts',
+          lang.t('Alerts'),
           Icons.warning_amber,
           iot.unreadAlertCount > 0 ? Colors.orange : Colors.grey,
         ),
@@ -331,7 +333,7 @@ class IoTDashboardScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildAutoIrrigationCard(BuildContext context, IoTProvider iot) {
+  Widget _buildAutoIrrigationCard(BuildContext context, IoTProvider iot, LanguageProvider lang) {
     return Card(
       color: iot.autoIrrigation ? Colors.green.shade50 : Colors.grey.shade50,
       child: Padding(
@@ -350,17 +352,17 @@ class IoTDashboardScreen extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        'Smart Irrigation',
-                        style: TextStyle(
+                      Text(
+                        lang.t('Smart Irrigation'),
+                        style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                       Text(
                         iot.autoIrrigation
-                            ? 'Pump starts when moisture < ${iot.moistureThreshold.round()}%'
-                            : 'Manual control mode',
+                            ? '${lang.t('Pump starts when moisture < ')}${iot.moistureThreshold.round()}%'
+                            : lang.t('Manual control mode'),
                         style: TextStyle(
                           fontSize: 12,
                           color: Colors.grey.shade600,
@@ -380,7 +382,7 @@ class IoTDashboardScreen extends StatelessWidget {
               const SizedBox(height: 12),
               Row(
                 children: [
-                  const Text('Threshold:', style: TextStyle(fontSize: 13)),
+                  Text(lang.t('Threshold:'), style: const TextStyle(fontSize: 13)),
                   Expanded(
                     child: Slider(
                       value: iot.moistureThreshold,
@@ -409,6 +411,7 @@ class IoTDashboardScreen extends StatelessWidget {
     BuildContext context,
     IoTDevice device,
     IoTProvider iot,
+    LanguageProvider lang,
   ) {
     final reading = device.lastReading ?? 0;
     Color valueColor;
@@ -459,7 +462,7 @@ class IoTDashboardScreen extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 10),
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
-        onTap: () => _showSensorDetail(context, device, iot),
+        onTap: () => _showSensorDetail(context, device, iot, lang),
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Column(
@@ -501,7 +504,7 @@ class IoTDashboardScreen extends StatelessWidget {
                             ),
                             const SizedBox(width: 4),
                             Text(
-                              device.isOnline ? 'Online' : 'Offline',
+                              device.isOnline ? lang.t('Online') : lang.t('Offline'),
                               style: TextStyle(
                                 fontSize: 11,
                                 color: Colors.grey.shade500,
@@ -524,7 +527,7 @@ class IoTDashboardScreen extends StatelessWidget {
                         ),
                       ),
                       Text(
-                        'Live',
+                        lang.t('Live'),
                         style: TextStyle(
                           fontSize: 10,
                           color: Colors.grey.shade400,
@@ -551,7 +554,7 @@ class IoTDashboardScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildActuatorCard(IoTDevice device, IoTProvider iot) {
+  Widget _buildActuatorCard(IoTDevice device, IoTProvider iot, LanguageProvider lang) {
     final isActive = device.isActive;
     final color = isActive ? Colors.blue : Colors.grey;
     final icon = device.type == 'pump'
@@ -598,7 +601,7 @@ class IoTDashboardScreen extends StatelessWidget {
                       borderRadius: BorderRadius.circular(4),
                     ),
                     child: Text(
-                      isActive ? '● RUNNING' : '○ OFF',
+                      isActive ? lang.t('● RUNNING') : lang.t('○ OFF'),
                       style: TextStyle(
                         fontSize: 10,
                         fontWeight: FontWeight.bold,
@@ -614,7 +617,7 @@ class IoTDashboardScreen extends StatelessWidget {
             FilledButton.tonalIcon(
               onPressed: () => iot.toggleDevice(device.id),
               icon: Icon(isActive ? Icons.stop : Icons.play_arrow),
-              label: Text(isActive ? 'Stop' : 'Start'),
+              label: Text(isActive ? lang.t('Stop') : lang.t('Start')),
               style: FilledButton.styleFrom(
                 backgroundColor: isActive
                     ? Colors.red.shade100
@@ -632,6 +635,7 @@ class IoTDashboardScreen extends StatelessWidget {
     BuildContext context,
     IoTDevice device,
     IoTProvider iot,
+    LanguageProvider lang,
   ) {
     final history = iot.getSensorHistory(device.id);
 
@@ -664,38 +668,38 @@ class IoTDashboardScreen extends StatelessWidget {
             ),
             const SizedBox(height: 4),
             Text(
-              'Type: ${device.type.replaceAll("_", " ").toUpperCase()}',
+              '${lang.t('Type: ')}${device.type.replaceAll("_", " ").toUpperCase()}',
               style: TextStyle(color: Colors.grey.shade600),
             ),
             const SizedBox(height: 16),
             Row(
               children: [
                 _detailStat(
-                  'Current',
+                  lang.t('Current'),
                   '${device.lastReading?.toStringAsFixed(1) ?? "--"}${device.unit ?? ""}',
                 ),
                 const SizedBox(width: 24),
                 if (history.length >= 2) ...[
                   _detailStat(
-                    'Min',
+                    lang.t('Min'),
                     '${history.map((r) => r.value).reduce((a, b) => a < b ? a : b).toStringAsFixed(1)}${device.unit ?? ""}',
                   ),
                   const SizedBox(width: 24),
                   _detailStat(
-                    'Max',
+                    lang.t('Max'),
                     '${history.map((r) => r.value).reduce((a, b) => a > b ? a : b).toStringAsFixed(1)}${device.unit ?? ""}',
                   ),
                 ],
               ],
             ),
             const SizedBox(height: 20),
-            const Text(
-              'Recent Readings',
-              style: TextStyle(fontWeight: FontWeight.bold),
+            Text(
+              lang.t('Recent Readings'),
+              style: const TextStyle(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
             if (history.isEmpty)
-              Text('No data yet', style: TextStyle(color: Colors.grey.shade500))
+              Text(lang.t('No data yet'), style: TextStyle(color: Colors.grey.shade500))
             else
               SizedBox(
                 height: 60,
@@ -749,7 +753,7 @@ class IoTDashboardScreen extends StatelessWidget {
     );
   }
 
-  void _showAlerts(BuildContext context, IoTProvider iot) {
+  void _showAlerts(BuildContext context, IoTProvider iot, LanguageProvider lang) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -767,9 +771,9 @@ class IoTDashboardScreen extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(24, 16, 16, 8),
               child: Row(
                 children: [
-                  const Text(
-                    'Alerts',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  Text(
+                    lang.t('Alerts'),
+                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
                   const Spacer(),
                   if (iot.alerts.isNotEmpty)
@@ -778,7 +782,7 @@ class IoTDashboardScreen extends StatelessWidget {
                         iot.clearAllAlerts();
                         Navigator.pop(ctx);
                       },
-                      child: const Text('Clear All'),
+                      child: Text(lang.t('Clear All')),
                     ),
                 ],
               ),
@@ -796,7 +800,7 @@ class IoTDashboardScreen extends StatelessWidget {
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            'No alerts',
+                            lang.t('No alerts'),
                             style: TextStyle(color: Colors.grey.shade500),
                           ),
                         ],
@@ -845,7 +849,7 @@ class IoTDashboardScreen extends StatelessWidget {
                               ),
                             ),
                             subtitle: Text(
-                              '${alert.deviceName} • ${_timeAgo(alert.timestamp)}',
+                              '${alert.deviceName} • ${_timeAgo(alert.timestamp, lang)}',
                               style: TextStyle(
                                 fontSize: 11,
                                 color: Colors.grey.shade500,
@@ -863,11 +867,11 @@ class IoTDashboardScreen extends StatelessWidget {
     );
   }
 
-  String _timeAgo(DateTime dt) {
+  String _timeAgo(DateTime dt, LanguageProvider lang) {
     final diff = DateTime.now().difference(dt);
-    if (diff.inSeconds < 60) return 'just now';
-    if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
-    if (diff.inHours < 24) return '${diff.inHours}h ago';
-    return '${diff.inDays}d ago';
+    if (diff.inSeconds < 60) return lang.t('just now');
+    if (diff.inMinutes < 60) return '${diff.inMinutes}${lang.t('m ago')}';
+    if (diff.inHours < 24) return '${diff.inHours}${lang.t('h ago')}';
+    return '${diff.inDays}${lang.t('d ago')}';
   }
 }

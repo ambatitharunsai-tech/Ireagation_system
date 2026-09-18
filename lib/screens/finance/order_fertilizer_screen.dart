@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../providers/language_provider.dart';
 import 'package:intl/intl.dart';
 
 import '../../providers/finance_provider.dart';
@@ -11,35 +12,37 @@ class OrderFertilizerScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final lang = Provider.of<LanguageProvider>(context);
+
     final products = [
       {
-        'name': 'Urea (Nitrogen 46%)',
+        'name': lang.t('Urea (Nitrogen 46%)'),
         'price': 25.0,
         'icon': Icons.science,
-        'desc': 'High nitrogen content for green growth',
+        'desc': lang.t('High nitrogen content for green growth'),
       },
       {
-        'name': 'NPK 10-26-26',
+        'name': lang.t('NPK 10-26-26'),
         'price': 35.0,
         'icon': Icons.eco,
-        'desc': 'Balanced nutrients for roots and flowering',
+        'desc': lang.t('Balanced nutrients for roots and flowering'),
       },
       {
-        'name': 'Organic Compost',
+        'name': lang.t('Organic Compost'),
         'price': 15.0,
         'icon': Icons.park,
-        'desc': 'Natural soil enrichment',
+        'desc': lang.t('Natural soil enrichment'),
       },
       {
-        'name': 'DAP Fertilizer',
+        'name': lang.t('DAP Fertilizer'),
         'price': 40.0,
         'icon': Icons.water_drop,
-        'desc': 'Excellent source of P and N for early stages',
+        'desc': lang.t('Excellent source of P and N for early stages'),
       },
     ];
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Fertilizer Store')),
+      appBar: AppBar(title: Text(lang.t('Fertilizer Store'))),
       body: ListView.builder(
         padding: const EdgeInsets.all(16),
         itemCount: products.length,
@@ -85,7 +88,7 @@ class OrderFertilizerScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      '\$${(prod['price'] as double).toStringAsFixed(2)} / bag',
+                      '\$${(prod['price'] as double).toStringAsFixed(2)} / ${lang.t('bag')}',
                       style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         color: Colors.green,
@@ -101,7 +104,7 @@ class OrderFertilizerScreen extends StatelessWidget {
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  child: const Text('Buy'),
+                  child: Text(lang.t('Buy')),
                 ),
               ),
             ),
@@ -116,22 +119,23 @@ class OrderFertilizerScreen extends StatelessWidget {
     showDialog(
       context: context,
       builder: (ctx) {
+        final lang = Provider.of<LanguageProvider>(ctx);
         return AlertDialog(
-          title: Text('Order ${product['name']}'),
+          title: Text('${lang.t('Order')} ${product['name']}'),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                'Price: \$${(product['price'] as double).toStringAsFixed(2)} per bag',
+                '${lang.t('Price')}: \$${(product['price'] as double).toStringAsFixed(2)} ${lang.t('per bag')}',
               ),
               const SizedBox(height: 16),
               TextField(
                 controller: quantityCtrl,
                 keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  labelText: 'Quantity (Bags)',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.shopping_bag),
+                decoration: InputDecoration(
+                  labelText: lang.t('Quantity (Bags)'),
+                  border: const OutlineInputBorder(),
+                  prefixIcon: const Icon(Icons.shopping_bag),
                 ),
               ),
             ],
@@ -139,7 +143,7 @@ class OrderFertilizerScreen extends StatelessWidget {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx),
-              child: const Text('Cancel'),
+              child: Text(lang.t('Cancel')),
             ),
             FilledButton(
               onPressed: () {
@@ -168,13 +172,13 @@ class OrderFertilizerScreen extends StatelessWidget {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text(
-                      'Successfully ordered $qty bags for \$${total.toStringAsFixed(2)}',
+                      '${lang.t('Successfully ordered')} $qty ${lang.t('bags for')} \$${total.toStringAsFixed(2)}',
                     ),
                     backgroundColor: Colors.green,
                   ),
                 );
               },
-              child: const Text('Confirm Order'),
+              child: Text(lang.t('Confirm Order')),
             ),
           ],
         );

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../providers/language_provider.dart';
 import 'package:intl/intl.dart';
 
 import '../providers/auth_provider.dart';
@@ -37,23 +38,25 @@ class _AddFinanceDialogState extends State<AddFinanceDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final lang = Provider.of<LanguageProvider>(context);
+
     return AlertDialog(
-      title: const Text('Add Finance Entry'),
+      title: Text(lang.t('Add Finance Entry')),
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             SegmentedButton<bool>(
-              segments: const [
+              segments: [
                 ButtonSegment(
                   value: true,
-                  label: Text('Expense'),
-                  icon: Icon(Icons.money_off),
+                  label: Text(lang.t('Expense')),
+                  icon: const Icon(Icons.money_off),
                 ),
                 ButtonSegment(
                   value: false,
-                  label: Text('Sale'),
-                  icon: Icon(Icons.sell),
+                  label: Text(lang.t('Sale')),
+                  icon: const Icon(Icons.sell),
                 ),
               ],
               selected: {_isExpense},
@@ -64,44 +67,44 @@ class _AddFinanceDialogState extends State<AddFinanceDialog> {
             if (_isExpense) ...[
               TextField(
                 controller: _categoryCtrl,
-                decoration: const InputDecoration(
-                  labelText: 'Category',
-                  hintText: 'e.g. Seeds, Fertilizer, Labor',
+                decoration: InputDecoration(
+                  labelText: lang.t('Category'),
+                  hintText: lang.t('e.g. Seeds, Fertilizer, Labor'),
                 ),
               ),
               const SizedBox(height: 12),
               TextField(
                 controller: _amountCtrl,
                 keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  labelText: 'Amount (\$)',
-                  hintText: 'e.g. 150.00',
+                decoration: InputDecoration(
+                  labelText: lang.t('Amount (\$)'),
+                  hintText: lang.t('e.g. 150.00'),
                 ),
               ),
             ] else ...[
               TextField(
                 controller: _buyerCtrl,
-                decoration: const InputDecoration(
-                  labelText: 'Buyer Name',
-                  hintText: 'e.g. Local Market',
+                decoration: InputDecoration(
+                  labelText: lang.t('Buyer Name'),
+                  hintText: lang.t('e.g. Local Market'),
                 ),
               ),
               const SizedBox(height: 12),
               TextField(
                 controller: _quantityCtrl,
                 keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  labelText: 'Quantity',
-                  hintText: 'e.g. 100',
+                decoration: InputDecoration(
+                  labelText: lang.t('Quantity'),
+                  hintText: lang.t('e.g. 100'),
                 ),
               ),
               const SizedBox(height: 12),
               TextField(
                 controller: _priceCtrl,
                 keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  labelText: 'Price per Unit (\$)',
-                  hintText: 'e.g. 5.00',
+                decoration: InputDecoration(
+                  labelText: lang.t('Price per Unit (\$)'),
+                  hintText: lang.t('e.g. 5.00'),
                 ),
               ),
             ],
@@ -111,9 +114,9 @@ class _AddFinanceDialogState extends State<AddFinanceDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel'),
+          child: Text(lang.t('Cancel')),
         ),
-        FilledButton(onPressed: _save, child: const Text('Save')),
+        FilledButton(onPressed: _save, child: Text(lang.t('Save'))),
       ],
     );
   }

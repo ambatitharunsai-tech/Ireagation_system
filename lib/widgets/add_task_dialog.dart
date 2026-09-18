@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../providers/language_provider.dart';
 import 'package:intl/intl.dart';
 
 import '../providers/farm_provider.dart';
@@ -29,25 +30,27 @@ class _AddTaskDialogState extends State<AddTaskDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final lang = Provider.of<LanguageProvider>(context);
+
     return AlertDialog(
-      title: const Text('New Task'),
+      title: Text(lang.t('New Task')),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           TextField(
             controller: _titleCtrl,
-            decoration: const InputDecoration(
-              labelText: 'Task Title',
-              hintText: 'e.g. Apply fertilizer to wheat',
+            decoration: InputDecoration(
+              labelText: lang.t('Task Title'),
+              hintText: lang.t('e.g. Apply fertilizer to wheat'),
             ),
             autofocus: true,
           ),
           const SizedBox(height: 16),
           SegmentedButton<String>(
-            segments: const [
-              ButtonSegment(value: 'Low', label: Text('Low')),
-              ButtonSegment(value: 'Medium', label: Text('Medium')),
-              ButtonSegment(value: 'High', label: Text('High')),
+            segments: [
+              ButtonSegment(value: 'Low', label: Text(lang.t('Low'))),
+              ButtonSegment(value: 'Medium', label: Text(lang.t('Medium'))),
+              ButtonSegment(value: 'High', label: Text(lang.t('High'))),
             ],
             selected: {_selectedPriority},
             onSelectionChanged: (val) {
@@ -59,7 +62,7 @@ class _AddTaskDialogState extends State<AddTaskDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel'),
+          child: Text(lang.t('Cancel')),
         ),
         FilledButton(
           onPressed: () {
@@ -82,7 +85,7 @@ class _AddTaskDialogState extends State<AddTaskDialog> {
             );
             Navigator.pop(context);
           },
-          child: const Text('Add'),
+          child: Text(lang.t('Add')),
         ),
       ],
     );

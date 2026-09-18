@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../providers/language_provider.dart';
 
 import '../../providers/auth_provider.dart';
 
@@ -52,42 +53,46 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   void _showErrorDialog(String message) {
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        icon: const Icon(Icons.error_outline, color: Colors.red, size: 48),
-        title: const Text('Registration Failed'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(message, textAlign: TextAlign.center),
-            const SizedBox(height: 16),
-            Text(
-              'You can use Demo Mode to explore all features without an account.',
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
+      builder: (ctx) {
+        final lang = Provider.of<LanguageProvider>(ctx);
+        return AlertDialog(
+          icon: const Icon(Icons.error_outline, color: Colors.red, size: 48),
+          title: Text(lang.t('Registration Failed')),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(lang.t(message), textAlign: TextAlign.center),
+              const SizedBox(height: 16),
+              Text(
+                lang.t('You can use Demo Mode to explore all features without an account.'),
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: Text(lang.t('Try Again')),
+            ),
+            FilledButton.icon(
+              onPressed: () {
+                Navigator.pop(ctx); // close dialog
+                Provider.of<AuthProvider>(context, listen: false).loginAsDemo();
+                Navigator.pop(context); // close registration screen
+              },
+              icon: const Icon(Icons.explore),
+              label: Text(lang.t('Use Demo Mode')),
             ),
           ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Try Again'),
-          ),
-          FilledButton.icon(
-            onPressed: () {
-              Navigator.pop(ctx); // close dialog
-              Provider.of<AuthProvider>(context, listen: false).loginAsDemo();
-              Navigator.pop(context); // close registration screen
-            },
-            icon: const Icon(Icons.explore),
-            label: const Text('Use Demo Mode'),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    final lang = Provider.of<LanguageProvider>(context);
     final auth = Provider.of<AuthProvider>(context);
 
     return Scaffold(
@@ -118,10 +123,10 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                       color: Color(0xFF0F9D58),
                     ),
                     const SizedBox(height: 16),
-                    const Text(
-                      'Create Account',
+                    Text(
+                      lang.t('Create Account'),
                       textAlign: TextAlign.center,
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 28,
                         fontWeight: FontWeight.bold,
                         color: Color(0xFF2E7D32),
@@ -130,7 +135,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Join SmartAgri and manage your farm',
+                      lang.t('Join SmartAgri and manage your farm'),
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 15,
@@ -152,7 +157,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                             TextFormField(
                               controller: _nameCtrl,
                               decoration: InputDecoration(
-                                labelText: 'Full Name',
+                                labelText: lang.t('Full Name'),
                                 prefixIcon: const Icon(Icons.person_outline),
                                 filled: true,
                                 fillColor: Colors.grey.shade50,
@@ -160,7 +165,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                               textCapitalization: TextCapitalization.words,
                               validator: (val) =>
                                   val == null || val.trim().isEmpty
-                                  ? 'Enter your name'
+                                  ? lang.t('Enter your name')
                                   : null,
                             ),
                             const SizedBox(height: 16),
@@ -168,17 +173,17 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                               controller: _emailCtrl,
                               keyboardType: TextInputType.emailAddress,
                               decoration: InputDecoration(
-                                labelText: 'Email',
+                                labelText: lang.t('Email'),
                                 prefixIcon: const Icon(Icons.email_outlined),
                                 filled: true,
                                 fillColor: Colors.grey.shade50,
                               ),
                               validator: (val) {
                                 if (val == null || val.trim().isEmpty) {
-                                  return 'Enter your email';
+                                  return lang.t('Enter your email');
                                 }
                                 if (!val.contains('@') || !val.contains('.')) {
-                                  return 'Enter a valid email';
+                                  return lang.t('Enter a valid email');
                                 }
                                 return null;
                               },
@@ -188,7 +193,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                               controller: _passwordCtrl,
                               obscureText: _obscurePassword,
                               decoration: InputDecoration(
-                                labelText: 'Password',
+                                labelText: lang.t('Password'),
                                 prefixIcon: const Icon(Icons.lock_outline),
                                 filled: true,
                                 fillColor: Colors.grey.shade50,
@@ -205,7 +210,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                               ),
                               validator: (val) {
                                 if (val == null || val.length < 6) {
-                                  return 'Password must be at least 6 characters';
+                                  return lang.t('Password must be at least 6 characters');
                                 }
                                 return null;
                               },
@@ -215,7 +220,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                               controller: _confirmPasswordCtrl,
                               obscureText: _obscureConfirm,
                               decoration: InputDecoration(
-                                labelText: 'Confirm Password',
+                                labelText: lang.t('Confirm Password'),
                                 prefixIcon: const Icon(Icons.lock_outline),
                                 filled: true,
                                 fillColor: Colors.grey.shade50,
@@ -232,7 +237,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                               ),
                               validator: (val) {
                                 if (val != _passwordCtrl.text) {
-                                  return 'Passwords do not match';
+                                  return lang.t('Passwords do not match');
                                 }
                                 return null;
                               },
@@ -251,9 +256,9 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                 ),
-                                child: const Text(
-                                  'Create Account',
-                                  style: TextStyle(
+                                child: Text(
+                                  lang.t('Create Account'),
+                                  style: const TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.bold,
                                   ),
@@ -267,12 +272,12 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Text('Already have an account?'),
+                        Text(lang.t('Already have an account?')),
                         TextButton(
                           onPressed: () => Navigator.pop(context),
-                          child: const Text(
-                            'Login',
-                            style: TextStyle(fontWeight: FontWeight.bold),
+                          child: Text(
+                            lang.t('Login'),
+                            style: const TextStyle(fontWeight: FontWeight.bold),
                           ),
                         ),
                       ],

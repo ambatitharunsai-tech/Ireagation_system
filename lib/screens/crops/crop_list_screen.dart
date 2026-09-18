@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../providers/language_provider.dart';
 
 import '../../providers/farm_provider.dart';
 import '../../database/daos/crop_dao.dart';
@@ -10,12 +11,13 @@ class CropListScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final lang = Provider.of<LanguageProvider>(context);
     final farm = Provider.of<FarmProvider>(context);
     final theme = Theme.of(context);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('My Crops'),
+        title: Text(lang.t('My Crops')),
         actions: [
           if (farm.crops.isNotEmpty)
             Padding(
@@ -31,7 +33,7 @@ class CropListScreen extends StatelessWidget {
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
-                    '${farm.activeCropCount} active',
+                    '${farm.activeCropCount} ${lang.t('active')}',
                     style: TextStyle(
                       fontSize: 12,
                       color: theme.colorScheme.onPrimaryContainer,
@@ -50,16 +52,16 @@ class CropListScreen extends StatelessWidget {
                   Icon(Icons.grass, size: 80, color: Colors.grey.shade300),
                   const SizedBox(height: 16),
                   Text(
-                    'No crops yet',
+                    lang.t('No crops yet'),
                     style: TextStyle(fontSize: 18, color: Colors.grey.shade500),
                   ),
                   const SizedBox(height: 8),
-                  const Text('Tap + to add your first crop'),
+                  Text(lang.t('Tap + to add your first crop')),
                   const SizedBox(height: 24),
                   FilledButton.icon(
                     onPressed: () => AddCropDialog.show(context),
                     icon: const Icon(Icons.add),
-                    label: const Text('Add Crop'),
+                    label: Text(lang.t('Add Crop')),
                   ),
                 ],
               ),
@@ -69,27 +71,27 @@ class CropListScreen extends StatelessWidget {
               itemCount: farm.crops.length,
               itemBuilder: (context, i) {
                 final crop = farm.crops[i];
-                return _buildCropCard(context, crop, farm);
+                return _buildCropCard(context, crop, farm, lang);
               },
             ),
       floatingActionButton: farm.crops.isNotEmpty
           ? FloatingActionButton.extended(
               onPressed: () => AddCropDialog.show(context),
               icon: const Icon(Icons.add),
-              label: const Text('Add Crop'),
+              label: Text(lang.t('Add Crop')),
             )
           : null,
     );
   }
 
-  Widget _buildCropCard(BuildContext context, Crop crop, FarmProvider farm) {
+  Widget _buildCropCard(BuildContext context, Crop crop, FarmProvider farm, LanguageProvider lang) {
     final isActive = crop.status == 'Active';
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
-        onTap: () => _showCropDetails(context, crop),
+        onTap: () => _showCropDetails(context, crop, lang),
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Row(
@@ -138,7 +140,7 @@ class CropListScreen extends StatelessWidget {
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(
-                            crop.status,
+                            lang.t(crop.status),
                             style: TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.bold,
@@ -155,16 +157,16 @@ class CropListScreen extends StatelessWidget {
                       children: [
                         _infoChip(
                           Icons.timeline,
-                          crop.growthStage ?? 'Unknown',
+                          crop.growthStage != null ? lang.t(crop.growthStage!) : lang.t('Unknown'),
                         ),
                         const SizedBox(width: 12),
                         if (crop.area != null)
-                          _infoChip(Icons.square_foot, '${crop.area} acres'),
+                          _infoChip(Icons.square_foot, '${crop.area} ${lang.t('acres')}'),
                       ],
                     ),
                     if (crop.irrigationMethod != null) ...[
                       const SizedBox(height: 4),
-                      _infoChip(Icons.water_drop, crop.irrigationMethod!),
+                      _infoChip(Icons.water_drop, lang.t(crop.irrigationMethod!)),
                     ],
                   ],
                 ),
@@ -174,17 +176,17 @@ class CropListScreen extends StatelessWidget {
               PopupMenuButton<String>(
                 onSelected: (val) {
                   if (val == 'delete') {
-                    _confirmDelete(context, crop, farm);
+                    _confirmDelete(context, crop, farm, lang);
                   } else if (val == 'edit') {
-                    _showEditCropDialog(context, crop, farm);
+                    _showEditCropDialog(context, crop, farm, lang);
                   }
                 },
                 itemBuilder: (ctx) => [
-                  const PopupMenuItem(value: 'edit', child: Text('Edit')),
+                  PopupMenuItem(value: 'edit', child: Text(lang.t('Edit'))),
                   const PopupMenuDivider(),
-                  const PopupMenuItem(
+                  PopupMenuItem(
                     value: 'delete',
-                    child: Text('Delete', style: TextStyle(color: Colors.red)),
+                    child: Text(lang.t('Delete'), style: const TextStyle(color: Colors.red)),
                   ),
                 ],
               ),
@@ -206,7 +208,7 @@ class CropListScreen extends StatelessWidget {
     );
   }
 
-  void _showCropDetails(BuildContext context, Crop crop) {
+  void _showCropDetails(BuildContext context, Crop crop, LanguageProvider lang) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -243,24 +245,24 @@ class CropListScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 16),
-              _detailRow('Status', crop.status),
-              _detailRow('Growth Stage', crop.growthStage ?? 'Not set'),
+              _detailRow(lang.t('Status'), lang.t(crop.status)),
+              _detailRow(lang.t('Growth Stage'), crop.growthStage != null ? lang.t(crop.growthStage!) : lang.t('Not set')),
               _detailRow(
-                'Area',
-                crop.area != null ? '${crop.area} acres' : 'Not set',
+                lang.t('Area'),
+                crop.area != null ? '${crop.area} ${lang.t('acres')}' : lang.t('Not set'),
               ),
-              _detailRow('Soil Type', crop.soilType ?? 'Not set'),
-              _detailRow('Irrigation', crop.irrigationMethod ?? 'Not set'),
-              _detailRow('Sowing Date', crop.sowingDate ?? 'Not set'),
+              _detailRow(lang.t('Soil Type'), crop.soilType != null ? lang.t(crop.soilType!) : lang.t('Not set')),
+              _detailRow(lang.t('Irrigation'), crop.irrigationMethod != null ? lang.t(crop.irrigationMethod!) : lang.t('Not set')),
+              _detailRow(lang.t('Sowing Date'), crop.sowingDate ?? lang.t('Not set')),
               _detailRow(
-                'Expected Harvest',
-                crop.expectedHarvestDate ?? 'Not set',
+                lang.t('Expected Harvest'),
+                crop.expectedHarvestDate ?? lang.t('Not set'),
               ),
               if (crop.notes != null && crop.notes!.isNotEmpty) ...[
                 const SizedBox(height: 12),
-                const Text(
-                  'Notes',
-                  style: TextStyle(fontWeight: FontWeight.bold),
+                Text(
+                  lang.t('Notes'),
+                  style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 4),
                 Text(crop.notes!),
@@ -292,18 +294,18 @@ class CropListScreen extends StatelessWidget {
     );
   }
 
-  void _confirmDelete(BuildContext context, Crop crop, FarmProvider farm) {
+  void _confirmDelete(BuildContext context, Crop crop, FarmProvider farm, LanguageProvider lang) {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Delete Crop'),
+        title: Text(lang.t('Delete Crop')),
         content: Text(
-          'Are you sure you want to delete "${crop.name}"? This action cannot be undone.',
+          '${lang.t('Are you sure you want to delete')} "${crop.name}"? ${lang.t('This action cannot be undone.')}',
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel'),
+            child: Text(lang.t('Cancel')),
           ),
           FilledButton(
             style: FilledButton.styleFrom(backgroundColor: Colors.red),
@@ -312,16 +314,16 @@ class CropListScreen extends StatelessWidget {
               Navigator.pop(ctx);
               ScaffoldMessenger.of(
                 context,
-              ).showSnackBar(SnackBar(content: Text('${crop.name} deleted')));
+              ).showSnackBar(SnackBar(content: Text('${crop.name} ${lang.t('deleted')}',)));
             },
-            child: const Text('Delete'),
+            child: Text(lang.t('Delete')),
           ),
         ],
       ),
     );
   }
 
-  void _showEditCropDialog(BuildContext context, Crop crop, FarmProvider farm) {
+  void _showEditCropDialog(BuildContext context, Crop crop, FarmProvider farm, LanguageProvider lang) {
     final nameCtrl = TextEditingController(text: crop.name);
     final areaCtrl = TextEditingController(text: crop.area?.toString() ?? '');
     final notesCtrl = TextEditingController(text: crop.notes ?? '');
@@ -332,25 +334,25 @@ class CropListScreen extends StatelessWidget {
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setDialogState) => AlertDialog(
-          title: const Text('Edit Crop'),
+          title: Text(lang.t('Edit Crop')),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 TextField(
                   controller: nameCtrl,
-                  decoration: const InputDecoration(labelText: 'Crop Name'),
+                  decoration: InputDecoration(labelText: lang.t('Crop Name')),
                 ),
                 const SizedBox(height: 12),
                 TextField(
                   controller: areaCtrl,
                   keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(labelText: 'Area (acres)'),
+                  decoration: InputDecoration(labelText: lang.t('Area (acres)')),
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String>(
                   initialValue: growthStage,
-                  decoration: const InputDecoration(labelText: 'Growth Stage'),
+                  decoration: InputDecoration(labelText: lang.t('Growth Stage')),
                   items:
                       [
                             'Seedling',
@@ -360,7 +362,7 @@ class CropListScreen extends StatelessWidget {
                             'Harvest Ready',
                           ]
                           .map(
-                            (s) => DropdownMenuItem(value: s, child: Text(s)),
+                            (s) => DropdownMenuItem(value: s, child: Text(lang.t(s))),
                           )
                           .toList(),
                   onChanged: (v) => setDialogState(() => growthStage = v!),
@@ -368,17 +370,17 @@ class CropListScreen extends StatelessWidget {
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String>(
                   initialValue: status,
-                  decoration: const InputDecoration(labelText: 'Status'),
+                  decoration: InputDecoration(labelText: lang.t('Status')),
                   items: ['Active', 'Harvested', 'Inactive']
-                      .map((s) => DropdownMenuItem(value: s, child: Text(s)))
+                      .map((s) => DropdownMenuItem(value: s, child: Text(lang.t(s))))
                       .toList(),
                   onChanged: (v) => setDialogState(() => status = v!),
                 ),
                 const SizedBox(height: 12),
                 TextField(
                   controller: notesCtrl,
-                  decoration: const InputDecoration(
-                    labelText: 'Remarks / Notes',
+                  decoration: InputDecoration(
+                    labelText: lang.t('Remarks / Notes'),
                   ),
                   maxLines: 2,
                 ),
@@ -388,7 +390,7 @@ class CropListScreen extends StatelessWidget {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx),
-              child: const Text('Cancel'),
+              child: Text(lang.t('Cancel')),
             ),
             FilledButton(
               onPressed: () {
@@ -402,7 +404,7 @@ class CropListScreen extends StatelessWidget {
                 farm.updateCrop(crop);
                 Navigator.pop(ctx);
               },
-              child: const Text('Update'),
+              child: Text(lang.t('Update')),
             ),
           ],
         ),

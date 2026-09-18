@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../providers/language_provider.dart';
 
 import '../../providers/auth_provider.dart';
 import 'registration_screen.dart';
@@ -42,36 +43,39 @@ class _LoginScreenState extends State<LoginScreen> {
   void _showErrorDialog(String message) {
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        icon: const Icon(Icons.error_outline, color: Colors.red, size: 48),
-        title: const Text('Login Failed'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(message, textAlign: TextAlign.center),
-            const SizedBox(height: 16),
-            Text(
-              'You can use Demo Mode to explore all features without an account.',
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
+      builder: (ctx) {
+        final lang = Provider.of<LanguageProvider>(ctx);
+        return AlertDialog(
+          icon: const Icon(Icons.error_outline, color: Colors.red, size: 48),
+          title: Text(lang.t('Login Failed')),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(lang.t(message), textAlign: TextAlign.center),
+              const SizedBox(height: 16),
+              Text(
+                lang.t('You can use Demo Mode to explore all features without an account.'),
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: Text(lang.t('Try Again')),
+            ),
+            FilledButton.icon(
+              onPressed: () {
+                Navigator.pop(ctx);
+                _demoLogin();
+              },
+              icon: const Icon(Icons.explore),
+              label: Text(lang.t('Use Demo Mode')),
             ),
           ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Try Again'),
-          ),
-          FilledButton.icon(
-            onPressed: () {
-              Navigator.pop(ctx);
-              _demoLogin();
-            },
-            icon: const Icon(Icons.explore),
-            label: const Text('Use Demo Mode'),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -81,6 +85,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final lang = Provider.of<LanguageProvider>(context);
     final auth = Provider.of<AuthProvider>(context);
 
     return Scaffold(
@@ -119,7 +124,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Intelligent Farm Management',
+                      lang.t('Intelligent Farm Management'),
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 16,
@@ -141,20 +146,20 @@ class _LoginScreenState extends State<LoginScreen> {
                             TextFormField(
                               controller: _emailCtrl,
                               decoration: InputDecoration(
-                                labelText: 'Email',
+                                labelText: lang.t('Email'),
                                 prefixIcon: const Icon(Icons.email_outlined),
                                 filled: true,
                                 fillColor: Colors.grey.shade50,
                               ),
                               keyboardType: TextInputType.emailAddress,
                               validator: (v) =>
-                                  v!.isEmpty ? 'Enter email' : null,
+                                  v!.isEmpty ? lang.t('Enter email') : null,
                             ),
                             const SizedBox(height: 16),
                             TextFormField(
                               controller: _passwordCtrl,
                               decoration: InputDecoration(
-                                labelText: 'Password',
+                                labelText: lang.t('Password'),
                                 prefixIcon: const Icon(Icons.lock_outline),
                                 filled: true,
                                 fillColor: Colors.grey.shade50,
@@ -172,10 +177,10 @@ class _LoginScreenState extends State<LoginScreen> {
                               obscureText: _obscurePassword,
                               validator: (v) {
                                 if (v == null || v.isEmpty) {
-                                  return 'Enter password';
+                                  return lang.t('Enter password');
                                 }
                                 if (v.length < 6) {
-                                  return 'Password must be at least 6 characters';
+                                  return lang.t('Password must be at least 6 characters');
                                 }
                                 return null;
                               },
@@ -194,9 +199,9 @@ class _LoginScreenState extends State<LoginScreen> {
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                 ),
-                                child: const Text(
-                                  'Login',
-                                  style: TextStyle(
+                                child: Text(
+                                  lang.t('Login'),
+                                  style: const TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.bold,
                                   ),
@@ -206,7 +211,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               OutlinedButton.icon(
                                 onPressed: _demoLogin,
                                 icon: const Icon(Icons.explore),
-                                label: const Text('Try Demo Mode'),
+                                label: Text(lang.t('Try Demo Mode')),
                                 style: OutlinedButton.styleFrom(
                                   padding: const EdgeInsets.symmetric(
                                     vertical: 16,
@@ -225,7 +230,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Text("Don't have an account?"),
+                        Text(lang.t("Don't have an account?")),
                         TextButton(
                           onPressed: () {
                             Navigator.push(
@@ -235,9 +240,9 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                             );
                           },
-                          child: const Text(
-                            'Register',
-                            style: TextStyle(fontWeight: FontWeight.bold),
+                          child: Text(
+                            lang.t('Register'),
+                            style: const TextStyle(fontWeight: FontWeight.bold),
                           ),
                         ),
                       ],

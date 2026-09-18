@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../providers/language_provider.dart';
 
 import '../providers/farm_provider.dart';
 import '../providers/auth_provider.dart';
@@ -33,17 +34,19 @@ class _AddCropDialogState extends State<AddCropDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final lang = Provider.of<LanguageProvider>(context);
+
     return AlertDialog(
-      title: const Text('Add New Crop'),
+      title: Text(lang.t('Add New Crop')),
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
               controller: _nameCtrl,
-              decoration: const InputDecoration(
-                labelText: 'Crop Name',
-                hintText: 'e.g. Wheat, Rice, Tomato',
+              decoration: InputDecoration(
+                labelText: lang.t('Crop Name'),
+                hintText: lang.t('e.g. Wheat, Rice, Tomato'),
               ),
               autofocus: true,
             ),
@@ -51,22 +54,22 @@ class _AddCropDialogState extends State<AddCropDialog> {
             TextField(
               controller: _areaCtrl,
               keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
-                labelText: 'Area (acres)',
-                hintText: 'e.g. 5.0',
+              decoration: InputDecoration(
+                labelText: lang.t('Area (acres)'),
+                hintText: lang.t('e.g. 5.0'),
               ),
             ),
             const SizedBox(height: 12),
             DropdownButtonFormField<String>(
               initialValue: _growthStage,
-              decoration: const InputDecoration(labelText: 'Growth Stage'),
+              decoration: InputDecoration(labelText: lang.t('Growth Stage')),
               items: [
                 'Seedling',
                 'Vegetative',
                 'Flowering',
                 'Fruiting',
                 'Harvest Ready',
-              ].map((s) => DropdownMenuItem(value: s, child: Text(s))).toList(),
+              ].map((s) => DropdownMenuItem(value: s, child: Text(lang.t(s)))).toList(),
               onChanged: (v) {
                 if (v != null) setState(() => _growthStage = v);
               },
@@ -74,14 +77,14 @@ class _AddCropDialogState extends State<AddCropDialog> {
             const SizedBox(height: 12),
             DropdownButtonFormField<String>(
               initialValue: _irrigationMethod,
-              decoration: const InputDecoration(labelText: 'Irrigation Method'),
+              decoration: InputDecoration(labelText: lang.t('Irrigation Method')),
               items: [
                 'Drip',
                 'Sprinkler',
                 'Flood',
                 'Furrow',
                 'Rain-fed',
-              ].map((s) => DropdownMenuItem(value: s, child: Text(s))).toList(),
+              ].map((s) => DropdownMenuItem(value: s, child: Text(lang.t(s)))).toList(),
               onChanged: (v) {
                 if (v != null) setState(() => _irrigationMethod = v);
               },
@@ -89,9 +92,9 @@ class _AddCropDialogState extends State<AddCropDialog> {
             const SizedBox(height: 12),
             TextField(
               controller: _notesCtrl,
-              decoration: const InputDecoration(
-                labelText: 'Remarks / Notes',
-                hintText: 'e.g. Needs extra fertilizer next week',
+              decoration: InputDecoration(
+                labelText: lang.t('Remarks / Notes'),
+                hintText: lang.t('e.g. Needs extra fertilizer next week'),
               ),
               maxLines: 2,
             ),
@@ -101,7 +104,7 @@ class _AddCropDialogState extends State<AddCropDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel'),
+          child: Text(lang.t('Cancel')),
         ),
         FilledButton(
           onPressed: () async {
@@ -134,12 +137,12 @@ class _AddCropDialogState extends State<AddCropDialog> {
               nav.pop();
               if (success) {
                 messenger.showSnackBar(
-                  SnackBar(content: Text('$name added successfully!')),
+                  SnackBar(content: Text('${lang.t(name)} ${lang.t('added successfully!')}')),
                 );
               }
             }
           },
-          child: const Text('Save'),
+          child: Text(lang.t('Save')),
         ),
       ],
     );

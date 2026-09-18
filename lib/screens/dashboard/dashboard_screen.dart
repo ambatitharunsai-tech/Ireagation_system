@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../providers/language_provider.dart';
 import 'package:geolocator/geolocator.dart';
 
 import '../../providers/farm_provider.dart';
@@ -71,6 +72,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final lang = Provider.of<LanguageProvider>(context);
     final user = Provider.of<AuthProvider>(context).currentUser;
     final farm = Provider.of<FarmProvider>(context);
     final finance = Provider.of<FinanceProvider>(context);
@@ -85,7 +87,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Hello, ${user?.name ?? "Farmer"} 👋',
+              '${lang.t('Hello')}, ${user?.name ?? lang.t('Farmer')} 👋',
               style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800),
             ),
             if (user?.farmName != null)
@@ -155,7 +157,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   const SizedBox(height: 24),
 
                   Text(
-                    'Quick Actions',
+                    lang.t('Quick Actions'),
                     style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w800,
                       letterSpacing: -0.5,
@@ -166,7 +168,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   const SizedBox(height: 24),
 
                   Text(
-                    'IoT Sensors',
+                    lang.t('IoT Sensors'),
                     style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w800,
                       letterSpacing: -0.5,
@@ -180,14 +182,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'Recent Crops',
+                        lang.t('Recent Crops'),
                         style: theme.textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.w800,
                           letterSpacing: -0.5,
                         ),
                       ),
                       Text(
-                        '${farm.crops.length} total',
+                        '${farm.crops.length} ${lang.t('total')}',
                         style: TextStyle(
                           color: Colors.grey.shade600,
                           fontWeight: FontWeight.w600,
@@ -204,14 +206,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'Pending Tasks',
+                        lang.t('Pending Tasks'),
                         style: theme.textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.w800,
                           letterSpacing: -0.5,
                         ),
                       ),
                       Text(
-                        '${farm.pendingTaskCount} pending',
+                        '${farm.pendingTaskCount} ${lang.t('pending')}',
                         style: TextStyle(
                           color: Colors.grey.shade600,
                           fontWeight: FontWeight.w600,
@@ -265,6 +267,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildWeatherCard(ThemeData theme) {
+    final lang = Provider.of<LanguageProvider>(context);
     if (_loadingWeather) {
       return Container(
         height: 180,
@@ -287,15 +290,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
           color: Colors.grey.shade100,
           borderRadius: BorderRadius.circular(28),
         ),
-        child: const Center(
+        child: Center(
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.cloud_off, size: 32, color: Colors.grey),
-              SizedBox(width: 12),
+              const Icon(Icons.cloud_off, size: 32, color: Colors.grey),
+              const SizedBox(width: 12),
               Text(
-                'Weather data unavailable',
-                style: TextStyle(
+                lang.t('Weather data unavailable'),
+                style: const TextStyle(
                   color: Colors.grey,
                   fontWeight: FontWeight.w600,
                 ),
@@ -310,6 +313,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
     List<Color> gradientColors = isSunny
         ? [const Color(0xFF56CCF2), const Color(0xFF2F80ED)]
         : [const Color(0xFF4B79A1), const Color(0xFF283E51)];
+
+    String locDisplay = _locationName;
+    if (_locationName == "Detecting...") { locDisplay = lang.t('Detecting...'); }
+    else if (_locationName == "Current Location") { locDisplay = lang.t('Current Location'); }
 
     return Container(
       decoration: BoxDecoration(
@@ -364,7 +371,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         ),
                         const SizedBox(width: 4),
                         Text(
-                          _locationName,
+                          locDisplay,
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 12,
@@ -405,7 +412,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           ),
                         ),
                         Text(
-                          'Feels like ${_weather!.temperature.round() + 1}°',
+                          '${lang.t('Feels like')} ${_weather!.temperature.round() + 1}°',
                           style: TextStyle(
                             fontSize: 13,
                             color: Colors.white.withValues(alpha: 0.8),
@@ -423,17 +430,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 children: [
                   _weatherDetailInfo(
                     Icons.water_drop_outlined,
-                    'Humidity',
+                    lang.t('Humidity'),
                     '${_weather!.humidity.round()}%',
                   ),
                   _weatherDetailInfo(
                     Icons.air,
-                    'Wind',
+                    lang.t('Wind'),
                     '${_weather!.windSpeed.round()} km/h',
                   ),
                   _weatherDetailInfo(
                     Icons.umbrella_outlined,
-                    'Rain',
+                    lang.t('Rain'),
                     '${_weather!.precipitationProbability.round()}%',
                   ),
                 ],
@@ -475,6 +482,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     FinanceProvider finance,
     ThemeData theme,
   ) {
+    final lang = Provider.of<LanguageProvider>(context);
     return GridView.count(
       crossAxisCount: 2,
       shrinkWrap: true,
@@ -484,9 +492,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
       childAspectRatio: 1.15,
       children: [
         _buildRichStatCard(
-          title: 'Total Crops',
+          title: lang.t('Total Crops'),
           value: '${farm.crops.length}',
-          subtitle: '${farm.activeCropCount} active',
+          subtitle: '${farm.activeCropCount} ${lang.t('active')}',
           icon: Icons.grass,
           color: Colors.green,
           progress: farm.crops.isEmpty
@@ -494,9 +502,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
               : farm.activeCropCount / farm.crops.length,
         ),
         _buildRichStatCard(
-          title: 'Active Tasks',
+          title: lang.t('Active Tasks'),
           value: '${farm.pendingTaskCount}',
-          subtitle: '${farm.tasks.length} total tasks',
+          subtitle: '${farm.tasks.length} ${lang.t('total tasks')}',
           icon: Icons.task_alt,
           color: Colors.orange,
           progress: farm.tasks.isEmpty
@@ -504,9 +512,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
               : farm.pendingTaskCount / farm.tasks.length,
         ),
         _buildRichStatCard(
-          title: 'Net Profit',
+          title: lang.t('Net Profit'),
           value: '\$${finance.profit.toStringAsFixed(0)}',
-          subtitle: 'Revenue - Expenses',
+          subtitle: lang.t('Revenue - Expenses'),
           icon: finance.profit >= 0 ? Icons.trending_up : Icons.trending_down,
           color: finance.profit >= 0 ? Colors.teal : Colors.red,
           progress: finance.totalRevenue == 0
@@ -514,9 +522,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
               : (finance.profit / finance.totalRevenue).clamp(0.0, 1.0),
         ),
         _buildRichStatCard(
-          title: 'Total Revenue',
+          title: lang.t('Total Revenue'),
           value: '\$${finance.totalRevenue.toStringAsFixed(0)}',
-          subtitle: '\$${finance.totalExpenses.toStringAsFixed(0)} exp',
+          subtitle: '\$${finance.totalExpenses.toStringAsFixed(0)} ${lang.t('exp')}',
           icon: Icons.account_balance_wallet,
           color: Colors.blue,
           progress: (finance.totalRevenue + finance.totalExpenses) == 0
@@ -620,31 +628,32 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildQuickActions(ThemeData theme) {
+    final lang = Provider.of<LanguageProvider>(context);
     return Row(
       children: [
         _buildActionChip(
-          'Add Crop',
+          lang.t('Add Crop'),
           Icons.add_circle_outline,
           Colors.green,
           onTap: () => AddCropDialog.show(context),
         ),
         const SizedBox(width: 8),
         _buildActionChip(
-          'Add Task',
+          lang.t('Add Task'),
           Icons.playlist_add,
           Colors.orange,
           onTap: () => AddTaskDialog.show(context),
         ),
         const SizedBox(width: 8),
         _buildActionChip(
-          'Add Expense',
+          lang.t('Add Expense'),
           Icons.money_off,
           Colors.red,
           onTap: () => AddFinanceDialog.show(context),
         ),
         const SizedBox(width: 8),
         _buildActionChip(
-          'Add Sale',
+          lang.t('Add Sale'),
           Icons.sell,
           Colors.blue,
           onTap: () => AddFinanceDialog.show(context),
@@ -694,6 +703,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildCropsList(FarmProvider farm) {
+    final lang = Provider.of<LanguageProvider>(context);
     if (farm.crops.isEmpty) {
       return Container(
         padding: const EdgeInsets.all(32),
@@ -708,7 +718,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               Icon(Icons.grass, size: 48, color: Colors.grey.shade300),
               const SizedBox(height: 12),
               Text(
-                'No crops added yet',
+                lang.t('No crops added yet'),
                 style: TextStyle(
                   color: Colors.grey.shade500,
                   fontWeight: FontWeight.w600,
@@ -762,7 +772,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '${crop.growthStage ?? "Unknown stage"} • ${crop.area ?? 0} acres',
+                    '${crop.growthStage ?? lang.t("Unknown stage")} • ${crop.area ?? 0} ${lang.t("acres")}',
                     style: TextStyle(
                       fontSize: 13,
                       color: Colors.grey.shade600,
@@ -772,7 +782,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   if (crop.notes != null && crop.notes!.isNotEmpty) ...[
                     const SizedBox(height: 6),
                     Text(
-                      'Notes: ${crop.notes}',
+                      '${lang.t("Notes")}: ${crop.notes}',
                       style: TextStyle(
                         fontSize: 12,
                         fontStyle: FontStyle.italic,
@@ -794,7 +804,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Text(
-                crop.status,
+                lang.t(crop.status),
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.bold,
@@ -809,6 +819,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildTasksList(FarmProvider farm) {
+    final lang = Provider.of<LanguageProvider>(context);
     final pending = farm.tasks
         .where((t) => t.status == 'Pending')
         .take(3)
@@ -828,7 +839,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               Icon(Icons.task_alt, size: 48, color: Colors.grey.shade300),
               const SizedBox(height: 12),
               Text(
-                'All caught up!',
+                lang.t('All caught up!'),
                 style: TextStyle(
                   color: Colors.grey.shade500,
                   fontWeight: FontWeight.w600,
@@ -894,7 +905,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Text(
-                task.priority,
+                lang.t(task.priority),
                 style: TextStyle(
                   fontSize: 12,
                   color: priorityColor,
@@ -909,6 +920,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildIoTSummary(IoTProvider iot) {
+    final lang = Provider.of<LanguageProvider>(context);
     final sensorsList = iot.sensors;
     if (sensorsList.isEmpty) {
       return Container(
@@ -920,7 +932,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ),
         child: Center(
           child: Text(
-            'No sensors connected',
+            lang.t('No sensors connected'),
             style: TextStyle(
               color: Colors.grey.shade500,
               fontWeight: FontWeight.w600,

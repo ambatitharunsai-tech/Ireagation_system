@@ -10,6 +10,7 @@ import 'providers/auth_provider.dart';
 import 'providers/farm_provider.dart';
 import 'providers/finance_provider.dart';
 import 'providers/iot_provider.dart';
+import 'providers/language_provider.dart';
 import 'screens/dashboard/main_layout.dart';
 import 'screens/auth/login_screen.dart';
 
@@ -33,6 +34,7 @@ void main() async {
         ChangeNotifierProvider(create: (_) => FarmProvider()),
         ChangeNotifierProvider(create: (_) => FinanceProvider()),
         ChangeNotifierProvider(create: (_) => IoTProvider()),
+        ChangeNotifierProvider(create: (_) => LanguageProvider()),
       ],
       child: const SmartAgriApp(),
     ),

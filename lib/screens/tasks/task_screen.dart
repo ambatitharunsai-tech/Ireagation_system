@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../providers/language_provider.dart';
 
 import '../../providers/farm_provider.dart';
 import '../../database/daos/task_dao.dart';
@@ -10,6 +11,7 @@ class TaskScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final lang = Provider.of<LanguageProvider>(context);
     final farm = Provider.of<FarmProvider>(context);
     final pending = farm.tasks.where((t) => t.status == 'Pending').toList();
     final inProgress = farm.tasks
@@ -19,14 +21,14 @@ class TaskScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Farm Tasks'),
+        title: Text(lang.t('Farm Tasks')),
         actions: [
           if (farm.tasks.isNotEmpty)
             Padding(
               padding: const EdgeInsets.only(right: 16),
               child: Center(
                 child: Text(
-                  '${done.length}/${farm.tasks.length} done',
+                  '${done.length}/${farm.tasks.length} ${lang.t("done")}',
                   style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
                 ),
               ),
@@ -41,11 +43,11 @@ class TaskScreen extends StatelessWidget {
                   Icon(Icons.task_alt, size: 80, color: Colors.grey.shade300),
                   const SizedBox(height: 16),
                   Text(
-                    'No tasks yet',
+                    lang.t('No tasks yet'),
                     style: TextStyle(fontSize: 18, color: Colors.grey.shade500),
                   ),
                   const SizedBox(height: 8),
-                  const Text('Tap + to create your first task'),
+                  Text(lang.t('Tap + to create one')),
                 ],
               ),
             )
@@ -53,29 +55,29 @@ class TaskScreen extends StatelessWidget {
               padding: const EdgeInsets.all(16),
               children: [
                 if (pending.isNotEmpty) ...[
-                  _buildSectionHeader('Pending', pending.length, Colors.orange),
-                  ...pending.map((t) => _buildTaskCard(context, t, farm)),
+                  _buildSectionHeader(lang.t('Pending'), pending.length, Colors.orange),
+                  ...pending.map((t) => _buildTaskCard(context, t, farm, lang)),
                   const SizedBox(height: 16),
                 ],
                 if (inProgress.isNotEmpty) ...[
                   _buildSectionHeader(
-                    'In Progress',
+                    lang.t('In Progress'),
                     inProgress.length,
                     Colors.blue,
                   ),
-                  ...inProgress.map((t) => _buildTaskCard(context, t, farm)),
+                  ...inProgress.map((t) => _buildTaskCard(context, t, farm, lang)),
                   const SizedBox(height: 16),
                 ],
                 if (done.isNotEmpty) ...[
-                  _buildSectionHeader('Completed', done.length, Colors.green),
-                  ...done.map((t) => _buildTaskCard(context, t, farm)),
+                  _buildSectionHeader(lang.t('Done'), done.length, Colors.green),
+                  ...done.map((t) => _buildTaskCard(context, t, farm, lang)),
                 ],
               ],
             ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => AddTaskDialog.show(context),
         icon: const Icon(Icons.add),
-        label: const Text('Add Task'),
+        label: Text(lang.t('Add Task')),
       ),
     );
   }
@@ -123,6 +125,7 @@ class TaskScreen extends StatelessWidget {
     BuildContext context,
     FarmTask task,
     FarmProvider farm,
+    LanguageProvider lang,
   ) {
     final priorityColor = task.priority == 'High'
         ? Colors.red
@@ -165,7 +168,7 @@ class TaskScreen extends StatelessWidget {
                 borderRadius: BorderRadius.circular(4),
               ),
               child: Text(
-                task.priority,
+                lang.t(task.priority), // Assume priority string is translated
                 style: TextStyle(
                   fontSize: 10,
                   color: priorityColor,
@@ -185,16 +188,16 @@ class TaskScreen extends StatelessWidget {
             }
           },
           itemBuilder: (ctx) => [
-            const PopupMenuItem(value: 'Pending', child: Text('Mark Pending')),
-            const PopupMenuItem(
+            PopupMenuItem(value: 'Pending', child: Text(lang.t('Pending'))),
+            PopupMenuItem(
               value: 'In Progress',
-              child: Text('Mark In Progress'),
+              child: Text(lang.t('In Progress')),
             ),
-            const PopupMenuItem(value: 'Done', child: Text('Mark Done')),
+            PopupMenuItem(value: 'Done', child: Text(lang.t('Done'))),
             const PopupMenuDivider(),
             const PopupMenuItem(
               value: 'delete',
-              child: Text('Delete', style: TextStyle(color: Colors.red)),
+              child: Text('Delete', style: TextStyle(color: Colors.red)), // Delete might not need translation if icon/red is clear, but let's translate if added
             ),
           ],
         ),
