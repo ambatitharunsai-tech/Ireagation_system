@@ -17,32 +17,30 @@ class WeatherDetailsScreen extends StatelessWidget {
     final forecast = weatherProv.forecast;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(lang.t('Weather Forecast')),
-      ),
+      appBar: AppBar(title: Text(lang.t('Weather Forecast'))),
       body: weatherProv.isLoading
           ? const Center(child: CircularProgressIndicator())
           : current == null
-              ? Center(child: Text(lang.t('Weather data unavailable.')))
-              : RefreshIndicator(
-                  onRefresh: weatherProv.fetchWeather,
-                  child: ListView(
-                    padding: const EdgeInsets.all(16),
-                    children: [
-                      _buildHeader(current, lang),
-                      const SizedBox(height: 24),
-                      Text(
-                        lang.t('7-Day Forecast'),
-                        style: const TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      ...forecast.map((f) => _buildForecastDay(context, f, lang)),
-                    ],
+          ? Center(child: Text(lang.t('Weather data unavailable.')))
+          : RefreshIndicator(
+              onRefresh: weatherProv.fetchWeather,
+              child: ListView(
+                padding: const EdgeInsets.all(16),
+                children: [
+                  _buildHeader(current, lang),
+                  const SizedBox(height: 24),
+                  Text(
+                    lang.t('7-Day Forecast'),
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                ),
+                  const SizedBox(height: 12),
+                  ...forecast.map((f) => _buildForecastDay(context, f, lang)),
+                ],
+              ),
+            ),
     );
   }
 
@@ -76,7 +74,9 @@ class WeatherDetailsScreen extends StatelessWidget {
           ),
           const SizedBox(height: 24),
           Text(
-            current.temperature != null ? '${current.temperature}°C' : lang.t('No data'),
+            current.temperature != null
+                ? '${current.temperature}°C'
+                : lang.t('No data'),
             style: const TextStyle(
               fontSize: 64,
               color: Colors.white,
@@ -95,9 +95,21 @@ class WeatherDetailsScreen extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _buildDetailItem(Icons.water_drop, '${current.humidity ?? "--"}%', lang.t('Humidity')),
-              _buildDetailItem(Icons.air, '${current.windSpeed ?? "--"} km/h', lang.t('Wind')),
-              _buildDetailItem(Icons.beach_access, '${current.precipitationProbability ?? "--"}%', lang.t('Rain Prob')),
+              _buildDetailItem(
+                Icons.water_drop,
+                '${current.humidity ?? "--"}%',
+                lang.t('Humidity'),
+              ),
+              _buildDetailItem(
+                Icons.air,
+                '${current.windSpeed ?? "--"} km/h',
+                lang.t('Wind'),
+              ),
+              _buildDetailItem(
+                Icons.beach_access,
+                '${current.precipitationProbability ?? "--"}%',
+                lang.t('Rain Prob'),
+              ),
             ],
           ),
           const SizedBox(height: 16),
@@ -118,13 +130,29 @@ class WeatherDetailsScreen extends StatelessWidget {
       children: [
         Icon(icon, color: Colors.white.withValues(alpha: 0.8), size: 24),
         const SizedBox(height: 8),
-        Text(value, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-        Text(label, style: TextStyle(color: Colors.white.withValues(alpha: 0.8), fontSize: 12)),
+        Text(
+          value,
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        Text(
+          label,
+          style: TextStyle(
+            color: Colors.white.withValues(alpha: 0.8),
+            fontSize: 12,
+          ),
+        ),
       ],
     );
   }
 
-  Widget _buildForecastDay(BuildContext context, DailyForecast forecast, LanguageProvider lang) {
+  Widget _buildForecastDay(
+    BuildContext context,
+    DailyForecast forecast,
+    LanguageProvider lang,
+  ) {
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -139,8 +167,14 @@ class WeatherDetailsScreen extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
-            Text('${forecast.tempMax ?? "--"}°', style: const TextStyle(fontWeight: FontWeight.bold)),
-            Text('${forecast.tempMin ?? "--"}°', style: TextStyle(color: Colors.grey.shade600, fontSize: 12)),
+            Text(
+              '${forecast.tempMax ?? "--"}°',
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+            Text(
+              '${forecast.tempMin ?? "--"}°',
+              style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
+            ),
           ],
         ),
         children: [
@@ -149,12 +183,24 @@ class WeatherDetailsScreen extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                _buildForecastDetail(Icons.water_drop, lang.t('Rain Prob'), '${forecast.precipitationProbability ?? "--"}%'),
-                _buildForecastDetail(Icons.thermostat, lang.t('Max Temp'), '${forecast.tempMax ?? "--"}°C'),
-                _buildForecastDetail(Icons.thermostat_outlined, lang.t('Min Temp'), '${forecast.tempMin ?? "--"}°C'),
+                _buildForecastDetail(
+                  Icons.water_drop,
+                  lang.t('Rain Prob'),
+                  '${forecast.precipitationProbability ?? "--"}%',
+                ),
+                _buildForecastDetail(
+                  Icons.thermostat,
+                  lang.t('Max Temp'),
+                  '${forecast.tempMax ?? "--"}°C',
+                ),
+                _buildForecastDetail(
+                  Icons.thermostat_outlined,
+                  lang.t('Min Temp'),
+                  '${forecast.tempMin ?? "--"}°C',
+                ),
               ],
             ),
-          )
+          ),
         ],
       ),
     );
@@ -166,7 +212,10 @@ class WeatherDetailsScreen extends StatelessWidget {
         Icon(icon, color: Colors.blue.shade600, size: 24),
         const SizedBox(height: 4),
         Text(value, style: const TextStyle(fontWeight: FontWeight.bold)),
-        Text(label, style: TextStyle(color: Colors.grey.shade600, fontSize: 12)),
+        Text(
+          label,
+          style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
+        ),
       ],
     );
   }

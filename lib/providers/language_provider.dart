@@ -270,7 +270,8 @@ class LanguageProvider with ChangeNotifier {
       'Add Transaction': 'பரிவர்த்தனையைச் சேர்',
       'Order Fertilizer': 'உரத்தை ஆர்டர் செய்யவும்',
       'Farm Assistant': 'பண்ணை உதவியாளர்',
-      'Ask a question about farming...': 'விவசாயம் பற்றி ஒரு கேள்வி கேளுங்கள்...',
+      'Ask a question about farming...':
+          'விவசாயம் பற்றி ஒரு கேள்வி கேளுங்கள்...',
       'No alerts': 'தற்போது விழிப்பூட்டல்கள் இல்லை',
     },
     'Marathi': {
@@ -392,7 +393,8 @@ class LanguageProvider with ChangeNotifier {
       'Add Transaction': 'Agregar Transacción',
       'Order Fertilizer': 'Pedir Fertilizante',
       'Farm Assistant': 'Asistente Agrícola',
-      'Ask a question about farming...': 'Haz una pregunta sobre agricultura...',
+      'Ask a question about farming...':
+          'Haz una pregunta sobre agricultura...',
       'No alerts': 'No hay alertas en este momento',
     },
     'French': {
@@ -453,7 +455,8 @@ class LanguageProvider with ChangeNotifier {
       'Add Transaction': 'Ajouter Transaction',
       'Order Fertilizer': 'Commander de l\'engrais',
       'Farm Assistant': 'Assistant Agricole',
-      'Ask a question about farming...': 'Posez une question sur l\'agriculture...',
+      'Ask a question about farming...':
+          'Posez une question sur l\'agriculture...',
       'No alerts': 'Aucune alerte pour le moment',
     },
     'Arabic': {

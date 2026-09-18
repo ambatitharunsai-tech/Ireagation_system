@@ -29,7 +29,7 @@ class LocationService {
           return null; // Permission denied
         }
       }
-      
+
       if (permission == LocationPermission.deniedForever) {
         return null; // Permanently denied
       }
@@ -51,7 +51,8 @@ class LocationService {
           final place = placemarks.first;
           if (place.locality != null && place.locality!.isNotEmpty) {
             name = place.locality!;
-          } else if (place.subAdministrativeArea != null && place.subAdministrativeArea!.isNotEmpty) {
+          } else if (place.subAdministrativeArea != null &&
+              place.subAdministrativeArea!.isNotEmpty) {
             name = place.subAdministrativeArea!;
           }
         }

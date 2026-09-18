@@ -1,6 +1,8 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
+
 import '../services/iot_service.dart';
 import '../models/iot_models.dart';
 
@@ -9,7 +11,7 @@ class IoTProvider extends ChangeNotifier {
 
   final List<IoTAlertModel> _alerts = [];
   final List<IrrigationCommand> _pendingCommands = [];
-  
+
   bool _autoIrrigation = false; // Automation mode
   double _moistureThreshold = 30.0;
   Timer? _pollingTimer;
@@ -33,15 +35,19 @@ class IoTProvider extends ChangeNotifier {
 
   MqttConnectionStateApp get connectionState => _iotService.connectionState;
 
-  List<IoTDevice> get sensors =>
-      _iotService.devices.where((d) => d.latestTelemetry != null || d.deviceType == 'sensor').toList();
+  List<IoTDevice> get sensors => _iotService.devices
+      .where((d) => d.latestTelemetry != null || d.deviceType == 'sensor')
+      .toList();
   List<IoTDevice> get actuators => _iotService.devices
       .where((d) => d.deviceType == 'pump' || d.deviceType == 'valve')
       .toList();
   int get onlineCount => _iotService.devices.where((d) => d.isOnline).length;
 
   Future<void> connect(String farmId) async {
-    const broker = String.fromEnvironment('MQTT_BROKER', defaultValue: 'mqtt.ireagation.local');
+    const broker = String.fromEnvironment(
+      'MQTT_BROKER',
+      defaultValue: 'mqtt.ireagation.local',
+    );
     const port = int.fromEnvironment('MQTT_PORT', defaultValue: 1883);
     const secure = bool.fromEnvironment('MQTT_SECURE', defaultValue: false);
     const user = String.fromEnvironment('MQTT_USER', defaultValue: 'app');
@@ -77,7 +83,9 @@ class IoTProvider extends ChangeNotifier {
   }
 
   void _onAck(CommandAck ack) {
-    final cmdIdx = _pendingCommands.indexWhere((c) => c.commandId == ack.commandId);
+    final cmdIdx = _pendingCommands.indexWhere(
+      (c) => c.commandId == ack.commandId,
+    );
     if (cmdIdx != -1) {
       final cmd = _pendingCommands[cmdIdx];
       if (ack.status == 'accepted') {
@@ -101,12 +109,15 @@ class IoTProvider extends ChangeNotifier {
 
     final device = _iotService.devices.firstWhere(
       (d) => d.id == deviceId,
-      orElse: () => IoTDevice(id: '', farmId: '', zoneId: '', name: '', deviceType: ''),
+      orElse: () =>
+          IoTDevice(id: '', farmId: '', zoneId: '', name: '', deviceType: ''),
     );
     if (device.id.isEmpty) return;
 
-    final targetState = device.currentPumpState == 'ON' ? 'PUMP_OFF' : 'PUMP_ON';
-    
+    final targetState = device.currentPumpState == 'ON'
+        ? 'PUMP_OFF'
+        : 'PUMP_ON';
+
     final cmd = IrrigationCommand(
       commandId: const Uuid().v4(),
       deviceId: deviceId,
@@ -180,7 +191,7 @@ class IoTProvider extends ChangeNotifier {
   }
 
   // AI Agent stubs for UI compatibility (AI is advisory only)
-  bool get isAiAgentActive => false; 
+  bool get isAiAgentActive => false;
   String get lastAiRecommendation => 'AI recommendations unavailable';
   List<dynamic> get aiLogs => [];
   dynamic get aiAgent => null;
@@ -207,7 +218,7 @@ class IoTProvider extends ChangeNotifier {
   void addSimulatedDevice() {
     final newId = 'sim_${const Uuid().v4().substring(0, 6)}';
     final isSensor = _iotService.devices.length % 2 == 0;
-    
+
     final device = IoTDevice(
       id: newId,
       farmId: 'simulated_farm',
@@ -234,5 +245,4 @@ class IoTProvider extends ChangeNotifier {
     _iotService.devices.add(device);
     notifyListeners();
   }
-
 }

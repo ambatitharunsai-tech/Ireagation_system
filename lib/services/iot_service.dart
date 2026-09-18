@@ -1,14 +1,16 @@
 import 'dart:convert';
+
 import 'package:flutter/foundation.dart';
 import 'package:mqtt_client/mqtt_client.dart';
 import 'package:mqtt_client/mqtt_server_client.dart';
+
 import '../models/iot_models.dart';
 
 class IoTService {
   final List<IoTDevice> _devices = [];
   MqttServerClient? _client;
   String? _farmId;
-  
+
   MqttConnectionStateApp _connectionState = MqttConnectionStateApp.DISCONNECTED;
   MqttConnectionStateApp get connectionState => _connectionState;
 
@@ -36,14 +38,14 @@ class IoTService {
     bool secure = false,
   }) async {
     _farmId = farmId;
-    
+
     _updateState(MqttConnectionStateApp.CONNECTING);
     _client = MqttServerClient(brokerUrl, clientId);
     _client!.port = port;
     _client!.secure = secure;
     _client!.keepAlivePeriod = 60;
     _client!.autoReconnect = true; // Enable auto-reconnect
-    
+
     _client!.onDisconnected = _onDisconnected;
     _client!.onConnected = _onConnected;
     _client!.onAutoReconnect = _onAutoReconnect;
@@ -70,10 +72,16 @@ class IoTService {
   void _onConnected() {
     debugPrint('MQTT Connected. Subscribing to topics...');
     _updateState(MqttConnectionStateApp.CONNECTED);
-    
+
     if (_farmId != null) {
-      _client!.subscribe('farms/$_farmId/devices/+/telemetry', MqttQos.atLeastOnce);
-      _client!.subscribe('farms/$_farmId/devices/+/status', MqttQos.atLeastOnce);
+      _client!.subscribe(
+        'farms/$_farmId/devices/+/telemetry',
+        MqttQos.atLeastOnce,
+      );
+      _client!.subscribe(
+        'farms/$_farmId/devices/+/status',
+        MqttQos.atLeastOnce,
+      );
       _client!.subscribe('farms/$_farmId/devices/+/ack', MqttQos.atLeastOnce);
     }
 
@@ -81,7 +89,9 @@ class IoTService {
     _client!.updates!.listen((List<MqttReceivedMessage<MqttMessage?>>? c) {
       if (c == null || c.isEmpty) return;
       final recMess = c[0].payload as MqttPublishMessage;
-      final payload = MqttPublishPayload.bytesToStringAsString(recMess.payload.message);
+      final payload = MqttPublishPayload.bytesToStringAsString(
+        recMess.payload.message,
+      );
       _handleMqttMessage(c[0].topic, payload);
     });
   }
@@ -99,28 +109,28 @@ class IoTService {
 
       if (topic.endsWith('/telemetry')) {
         final telemetry = TelemetryReading.fromJson(data);
-        
+
         final device = _getOrAddDevice(deviceId, 'sensor');
         device.isOnline = true;
         device.lastSeenAt = telemetry.receivedAt; // use receivedAt since telemetry.timestamp could be old
         device.latestTelemetry = telemetry;
-        
+
         if (onTelemetryReceived != null) onTelemetryReceived!(telemetry);
-      } 
-      else if (topic.endsWith('/status')) {
+      } else if (topic.endsWith('/status')) {
         final status = DeviceStatus.fromJson(data);
-        
+
         final device = _getOrAddDevice(deviceId, 'device');
         device.isOnline = status.online;
         device.lastSeenAt = status.timestamp;
         device.batteryLevel = status.batteryLevel ?? device.batteryLevel;
         device.signalStrength = status.signalStrength ?? device.signalStrength;
-        if (status.pumpState != null) device.currentPumpState = status.pumpState;
-        if (status.valveState != null) device.currentValveState = status.valveState;
+        if (status.pumpState != null)
+          device.currentPumpState = status.pumpState;
+        if (status.valveState != null)
+          device.currentValveState = status.valveState;
 
         if (onStatusReceived != null) onStatusReceived!(status);
-      }
-      else if (topic.endsWith('/ack')) {
+      } else if (topic.endsWith('/ack')) {
         final ack = CommandAck.fromJson(data);
         if (onCommandAck != null) onCommandAck!(ack);
       }
@@ -147,7 +157,9 @@ class IoTService {
   }
 
   void sendCommand(IrrigationCommand command) {
-    if (_client == null || _client!.connectionStatus!.state != MqttConnectionState.connected || _farmId == null) {
+    if (_client == null ||
+        _client!.connectionStatus!.state != MqttConnectionState.connected ||
+        _farmId == null) {
       debugPrint('Cannot send command. Not connected.');
       return;
     }
@@ -167,7 +179,7 @@ class IoTService {
     _client!.publishMessage(topic, MqttQos.atLeastOnce, builder.payload!);
     command.state = CommandState.SENT;
   }
-  
+
   void disconnect() {
     _client?.disconnect();
   }

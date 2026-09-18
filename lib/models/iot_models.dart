@@ -1,8 +1,26 @@
 import 'package:flutter/foundation.dart';
 
 enum DeviceState { LIVE, STALE, OFFLINE, UNKNOWN, ERROR }
-enum MqttConnectionStateApp { DISCONNECTED, CONNECTING, CONNECTED, RECONNECTING, ERROR }
-enum CommandState { PENDING, SENT, ACKNOWLEDGED, EXECUTING, COMPLETED, REJECTED, FAILED, TIMEOUT, UNKNOWN }
+
+enum MqttConnectionStateApp {
+  DISCONNECTED,
+  CONNECTING,
+  CONNECTED,
+  RECONNECTING,
+  ERROR,
+}
+
+enum CommandState {
+  PENDING,
+  SENT,
+  ACKNOWLEDGED,
+  EXECUTING,
+  COMPLETED,
+  REJECTED,
+  FAILED,
+  TIMEOUT,
+  UNKNOWN,
+}
 
 class IoTDevice {
   final String id;
@@ -12,7 +30,7 @@ class IoTDevice {
   final String deviceType;
   final String? hardwareModel;
   final String? firmwareVersion;
-  
+
   bool isOnline;
   DateTime? lastSeenAt;
   double? batteryLevel;
@@ -52,7 +70,7 @@ class TelemetryReading {
   final String deviceId;
   final DateTime timestamp;
   final DateTime receivedAt;
-  
+
   final double? soilMoisture;
   final double? temperature;
   final double? humidity;
@@ -99,7 +117,9 @@ class TelemetryReading {
 
     return TelemetryReading(
       deviceId: json['device_id']?.toString() ?? '',
-      timestamp: parseDate(json['timestamp']) ?? DateTime.now(), // Fallback to received time only if missing
+      timestamp:
+          parseDate(json['timestamp']) ??
+          DateTime.now(), // Fallback to received time only if missing
       receivedAt: DateTime.now(),
       soilMoisture: parseDouble(json['soil_moisture']),
       temperature: parseDouble(json['temperature']),
@@ -147,7 +167,9 @@ class DeviceStatus {
       valveState: json['valve_state']?.toString(),
       batteryLevel: parseDouble(json['battery_level']),
       signalStrength: json['signal_strength']?.toString(),
-      timestamp: json['timestamp'] != null ? (DateTime.tryParse(json['timestamp'].toString()) ?? DateTime.now()) : DateTime.now(),
+      timestamp: json['timestamp'] != null
+          ? (DateTime.tryParse(json['timestamp'].toString()) ?? DateTime.now())
+          : DateTime.now(),
     );
   }
 }
@@ -199,7 +221,9 @@ class CommandAck {
       deviceId: json['device_id']?.toString() ?? '',
       command: json['command']?.toString() ?? '',
       status: json['status']?.toString() ?? 'unknown',
-      timestamp: json['timestamp'] != null ? (DateTime.tryParse(json['timestamp'].toString()) ?? DateTime.now()) : DateTime.now(),
+      timestamp: json['timestamp'] != null
+          ? (DateTime.tryParse(json['timestamp'].toString()) ?? DateTime.now())
+          : DateTime.now(),
     );
   }
 }

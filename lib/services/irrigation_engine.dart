@@ -21,7 +21,9 @@ class IrrigationEngine {
     // 1. Core Safety Rules
     if (!isAutoMode) return IrrigationDecision(false, 'Auto mode disabled', 0);
 
-    final moistureSensors = devices.where((d) => d.deviceType.contains('moisture') && d.isOnline);
+    final moistureSensors = devices.where(
+      (d) => d.deviceType.contains('moisture') && d.isOnline,
+    );
     if (moistureSensors.isEmpty) {
       return IrrigationDecision(false, 'No active moisture sensors', 0);
     }
@@ -36,7 +38,11 @@ class IrrigationEngine {
 
     // 2. Weather Safety
     if (weather != null && (weather.precipitationProbability ?? 0) > 70) {
-      return IrrigationDecision(false, 'High rain forecast, suppressing irrigation', 0);
+      return IrrigationDecision(
+        false,
+        'High rain forecast, suppressing irrigation',
+        0,
+      );
     }
 
     // 3. Extensible Rule Architecture (Crop-aware)
@@ -45,7 +51,9 @@ class IrrigationEngine {
     int maxDuration = 20;
 
     if (crop != null) {
-      final profile = defaultCropProfiles[crop.variety ?? crop.name] ?? defaultCropProfiles[crop.name];
+      final profile =
+          defaultCropProfiles[crop.variety ?? crop.name] ??
+          defaultCropProfiles[crop.name];
       if (profile != null) {
         threshold = profile.optimalMoistureMin;
         // Increase requirement during flowering
@@ -53,7 +61,8 @@ class IrrigationEngine {
           threshold += 10.0;
         }
         // Decrease requirement nearing harvest
-        if (crop.growthStage == 'Maturity' || crop.growthStage == 'Harvest Ready') {
+        if (crop.growthStage == 'Maturity' ||
+            crop.growthStage == 'Harvest Ready') {
           threshold -= 10.0;
         }
       }

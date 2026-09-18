@@ -215,6 +215,7 @@ class FarmProvider extends ChangeNotifier {
     _taskError = null;
     notifyListeners();
   }
+
   Future<List<Harvest>> getHarvestsForCrop(String cropId) async {
     try {
       return await _repo.getHarvestsByCrop(cropId);
@@ -223,6 +224,7 @@ class FarmProvider extends ChangeNotifier {
       return [];
     }
   }
+
   Future<List<CropStageHistory>> getStageHistory(String cropId) async {
     try {
       return await _repo.getStageHistory(cropId);

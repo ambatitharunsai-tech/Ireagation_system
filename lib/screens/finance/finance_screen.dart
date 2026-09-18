@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
 import '../../providers/language_provider.dart';
+
 import 'package:intl/intl.dart';
 
 import '../../providers/finance_provider.dart';
@@ -71,7 +73,8 @@ class FinanceScreen extends StatelessWidget {
             ),
           ],
         ),
-        floatingActionButton: FloatingActionButton.extended( heroTag: "finance_fab",
+        floatingActionButton: FloatingActionButton.extended(
+          heroTag: "finance_fab",
           onPressed: () => _showAddDialog(context),
           icon: const Icon(Icons.add),
           label: Text(lang.t('Add Entry')),
@@ -116,7 +119,11 @@ class FinanceScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildExpenseTab(BuildContext context, FinanceProvider finance, LanguageProvider lang) {
+  Widget _buildExpenseTab(
+    BuildContext context,
+    FinanceProvider finance,
+    LanguageProvider lang,
+  ) {
     if (finance.expenses.isEmpty) {
       return Center(
         child: Column(
@@ -182,7 +189,11 @@ class FinanceScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildSalesTab(BuildContext context, FinanceProvider finance, LanguageProvider lang) {
+  Widget _buildSalesTab(
+    BuildContext context,
+    FinanceProvider finance,
+    LanguageProvider lang,
+  ) {
     if (finance.sales.isEmpty) {
       return Center(
         child: Column(
@@ -234,7 +245,11 @@ class FinanceScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildFertilizerTab(BuildContext context, FinanceProvider finance, LanguageProvider lang) {
+  Widget _buildFertilizerTab(
+    BuildContext context,
+    FinanceProvider finance,
+    LanguageProvider lang,
+  ) {
     final fertilizerExpenses = finance.expenses
         .where((e) => e.category.toLowerCase().contains('fertilizer'))
         .toList();

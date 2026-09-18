@@ -1,4 +1,5 @@
 import 'dart:convert';
+
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -53,7 +54,9 @@ class WeatherData {
     precipitationProbability: json['precipitationProbability']?.toDouble(),
     weatherCode: json['weatherCode'],
     locationName: json['locationName'],
-    timestamp: json['timestamp'] != null ? DateTime.parse(json['timestamp']) : DateTime.now(),
+    timestamp: json['timestamp'] != null
+        ? DateTime.parse(json['timestamp'])
+        : DateTime.now(),
     isCached: json['isCached'] ?? true,
   );
 }
@@ -101,9 +104,12 @@ class WeatherService {
   static const String _cacheKey = 'weather_cache';
   static const String _cacheTimeKey = 'weather_cache_time';
   static const String _forecastCacheKey = 'forecast_cache';
-  
 
-  Future<WeatherData?> fetchWeather(double lat, double lon, String locationName) async {
+  Future<WeatherData?> fetchWeather(
+    double lat,
+    double lon,
+    String locationName,
+  ) async {
     final prefs = await SharedPreferences.getInstance();
 
     final url = Uri.parse(
@@ -121,7 +127,8 @@ class WeatherService {
         final weather = WeatherData(
           temperature: current['temperature_2m']?.toDouble(),
           humidity: current['relative_humidity_2m']?.toDouble(),
-          precipitationProbability: current['precipitation_probability']?.toDouble(),
+          precipitationProbability: current['precipitation_probability']
+              ?.toDouble(),
           weatherCode: current['weather_code'],
           windSpeed: current['wind_speed_10m']?.toDouble(),
           locationName: locationName,
@@ -160,7 +167,7 @@ class WeatherService {
       '&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,weather_code'
       '&forecast_days=7',
     );
-    
+
     final prefs = await SharedPreferences.getInstance();
 
     try {
@@ -181,21 +188,36 @@ class WeatherService {
           forecasts.add(
             DailyForecast(
               date: DateTime.parse(dates[i]),
-              tempMax: tempMax.length > i && tempMax[i] != null ? tempMax[i].toDouble() : null,
-              tempMin: tempMin.length > i && tempMin[i] != null ? tempMin[i].toDouble() : null,
-              precipitationProbability: precip.length > i && precip[i] != null ? precip[i].toDouble() : null,
+              tempMax: tempMax.length > i && tempMax[i] != null
+                  ? tempMax[i].toDouble()
+                  : null,
+              tempMin: tempMin.length > i && tempMin[i] != null
+                  ? tempMin[i].toDouble()
+                  : null,
+              precipitationProbability: precip.length > i && precip[i] != null
+                  ? precip[i].toDouble()
+                  : null,
               weatherCode: codes.length > i ? codes[i] : null,
             ),
           );
         }
-        
-        await prefs.setString(_forecastCacheKey, json.encode(forecasts.map((f) => {
-          'date': f.date.toIso8601String(),
-          'tempMax': f.tempMax,
-          'tempMin': f.tempMin,
-          'precipitationProbability': f.precipitationProbability,
-          'weatherCode': f.weatherCode,
-        }).toList()));
+
+        await prefs.setString(
+          _forecastCacheKey,
+          json.encode(
+            forecasts
+                .map(
+                  (f) => {
+                    'date': f.date.toIso8601String(),
+                    'tempMax': f.tempMax,
+                    'tempMin': f.tempMin,
+                    'precipitationProbability': f.precipitationProbability,
+                    'weatherCode': f.weatherCode,
+                  },
+                )
+                .toList(),
+          ),
+        );
 
         return forecasts;
       }
@@ -204,13 +226,18 @@ class WeatherService {
       final cachedStr = prefs.getString(_forecastCacheKey);
       if (cachedStr != null) {
         final List<dynamic> decoded = json.decode(cachedStr);
-        return decoded.map((j) => DailyForecast(
-          date: DateTime.parse(j['date']),
-          tempMax: j['tempMax']?.toDouble(),
-          tempMin: j['tempMin']?.toDouble(),
-          precipitationProbability: j['precipitationProbability']?.toDouble(),
-          weatherCode: j['weatherCode'],
-        )).toList();
+        return decoded
+            .map(
+              (j) => DailyForecast(
+                date: DateTime.parse(j['date']),
+                tempMax: j['tempMax']?.toDouble(),
+                tempMin: j['tempMin']?.toDouble(),
+                precipitationProbability: j['precipitationProbability']
+                    ?.toDouble(),
+                weatherCode: j['weatherCode'],
+              ),
+            )
+            .toList();
       }
     }
     return [];

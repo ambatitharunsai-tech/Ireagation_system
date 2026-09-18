@@ -162,11 +162,15 @@ class _CropListScreenState extends State<CropListScreen> {
 
   Widget _summaryCard(String title, String count, Color color) {
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withValues(alpha: 0.2)),
+        gradient: LinearGradient(
+          colors: [color.withValues(alpha: 0.2), color.withValues(alpha: 0.05)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: color.withValues(alpha: 0.3), width: 1.5),
       ),
       child: Column(
         children: [
@@ -474,13 +478,16 @@ class _CropListScreenState extends State<CropListScreen> {
     );
   }
 
-  void _showCropDetails(BuildContext context, Crop crop, LanguageProvider lang) {
+  void _showCropDetails(
+    BuildContext context,
+    Crop crop,
+    LanguageProvider lang,
+  ) {
     Navigator.push(
       context,
       MaterialPageRoute(builder: (_) => CropDetailScreen(crop: crop)),
     );
   }
-
 
   void _confirmDelete(
     BuildContext context,

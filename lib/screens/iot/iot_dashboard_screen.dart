@@ -44,13 +44,19 @@ class _IotDashboardScreenState extends State<IotDashboardScreen>
               backgroundColor: Colors.blue.shade700,
               title: Text(
                 lang.t('IoT Dashboard'),
-                style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
               ),
               actions: [
                 Stack(
                   children: [
                     IconButton(
-                      icon: const Icon(Icons.notifications_outlined, color: Colors.white),
+                      icon: const Icon(
+                        Icons.notifications_outlined,
+                        color: Colors.white,
+                      ),
                       onPressed: () => _showAlerts(context, iot, lang),
                     ),
                     if (iot.unreadAlertCount > 0)
@@ -96,7 +102,11 @@ class _IotDashboardScreenState extends State<IotDashboardScreen>
                         padding: const EdgeInsets.all(16.0),
                         child: Row(
                           children: [
-                            const Icon(Icons.wifi, color: Colors.white70, size: 20),
+                            const Icon(
+                              Icons.wifi,
+                              color: Colors.white70,
+                              size: 20,
+                            ),
                             const SizedBox(width: 8),
                             Text(
                               '${iot.onlineCount} ${lang.t('Devices Online')}',
@@ -132,14 +142,17 @@ class _IotDashboardScreenState extends State<IotDashboardScreen>
           ],
         ),
       ),
-      
-      floatingActionButton: FloatingActionButton.extended( heroTag: "iot_fab",
+
+      floatingActionButton: FloatingActionButton.extended(
+        heroTag: "iot_fab",
         onPressed: () => _showAddDeviceDialog(context, iot),
         backgroundColor: Colors.blue.shade700,
         icon: const Icon(Icons.add, color: Colors.white),
-        label: Text(lang.t('Add Device'), style: const TextStyle(color: Colors.white)),
+        label: Text(
+          lang.t('Add Device'),
+          style: const TextStyle(color: Colors.white),
+        ),
       ),
-
     );
   }
 
@@ -167,12 +180,19 @@ class _IotDashboardScreenState extends State<IotDashboardScreen>
       children: [
         Icon(Icons.circle, color: c, size: 10),
         const SizedBox(width: 4),
-        Text(text, style: TextStyle(color: c, fontSize: 10, fontWeight: FontWeight.bold)),
+        Text(
+          text,
+          style: TextStyle(color: c, fontSize: 10, fontWeight: FontWeight.bold),
+        ),
       ],
     );
   }
 
-  Widget _buildOverviewTab(BuildContext context, IoTProvider iot, LanguageProvider lang) {
+  Widget _buildOverviewTab(
+    BuildContext context,
+    IoTProvider iot,
+    LanguageProvider lang,
+  ) {
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
@@ -197,7 +217,9 @@ class _IotDashboardScreenState extends State<IotDashboardScreen>
       color: iot.emergencyStop ? Colors.red.shade50 : Colors.white,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: iot.emergencyStop ? Colors.red : Colors.transparent),
+        side: BorderSide(
+          color: iot.emergencyStop ? Colors.red : Colors.transparent,
+        ),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -205,24 +227,34 @@ class _IotDashboardScreenState extends State<IotDashboardScreen>
           children: [
             Row(
               children: [
-                Icon(Icons.warning_amber_rounded, color: iot.emergencyStop ? Colors.red : Colors.orange, size: 32),
+                Icon(
+                  Icons.warning_amber_rounded,
+                  color: iot.emergencyStop ? Colors.red : Colors.orange,
+                  size: 32,
+                ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        iot.emergencyStop ? lang.t('EMERGENCY STOP ACTIVE') : lang.t('Emergency Control'),
+                        iot.emergencyStop
+                            ? lang.t('EMERGENCY STOP ACTIVE')
+                            : lang.t('Emergency Control'),
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
-                          color: iot.emergencyStop ? Colors.red.shade800 : Colors.black87,
+                          color: iot.emergencyStop
+                              ? Colors.red.shade800
+                              : Colors.black87,
                         ),
                       ),
                       Text(
                         iot.emergencyStop
                             ? lang.t('All automated irrigation is suspended.')
-                            : lang.t('Instantly halt all pumps and automation.'),
+                            : lang.t(
+                                'Instantly halt all pumps and automation.',
+                              ),
                         style: TextStyle(
                           fontSize: 12,
                           color: Colors.grey.shade600,
@@ -266,7 +298,10 @@ class _IotDashboardScreenState extends State<IotDashboardScreen>
                 children: [
                   Text(
                     lang.t('AI Advisor'),
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
                   ),
                   Text(
                     lang.t(iot.lastAiRecommendation),
@@ -282,7 +317,9 @@ class _IotDashboardScreenState extends State<IotDashboardScreen>
   }
 
   Widget _buildQuickStats(IoTProvider iot, LanguageProvider lang) {
-    int activeActuators = iot.actuators.where((d) => d.currentPumpState == 'ON' || d.currentValveState == 'ON').length;
+    int activeActuators = iot.actuators
+        .where((d) => d.currentPumpState == 'ON' || d.currentValveState == 'ON')
+        .length;
     return Row(
       children: [
         Expanded(
@@ -348,7 +385,9 @@ class _IotDashboardScreenState extends State<IotDashboardScreen>
               title: Text(lang.t('Auto Irrigation')),
               subtitle: Text(lang.t('Trigger pumps based on soil moisture')),
               value: iot.autoIrrigation,
-              onChanged: iot.emergencyStop ? null : (v) => iot.setAutoIrrigation(v),
+              onChanged: iot.emergencyStop
+                  ? null
+                  : (v) => iot.setAutoIrrigation(v),
             ),
             const Divider(),
             Padding(
@@ -359,7 +398,10 @@ class _IotDashboardScreenState extends State<IotDashboardScreen>
                   const Spacer(),
                   Text(
                     '${iot.moistureThreshold.toInt()}%',
-                    style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.blue,
+                    ),
                   ),
                 ],
               ),
@@ -378,7 +420,11 @@ class _IotDashboardScreenState extends State<IotDashboardScreen>
     );
   }
 
-  Widget _buildDevicesTab(BuildContext context, IoTProvider iot, LanguageProvider lang) {
+  Widget _buildDevicesTab(
+    BuildContext context,
+    IoTProvider iot,
+    LanguageProvider lang,
+  ) {
     if (iot.devices.isEmpty) {
       return Center(
         child: Text(
@@ -405,10 +451,10 @@ class _IotDashboardScreenState extends State<IotDashboardScreen>
   Widget _buildSensorCard(IoTDevice device, LanguageProvider lang) {
     final state = device.state;
     final tel = device.latestTelemetry;
-    
+
     String mainValue = lang.t('No reading');
     String unit = '';
-    
+
     if (tel != null) {
       if (tel.soilMoisture != null) {
         mainValue = tel.soilMoisture!.toStringAsFixed(1);
@@ -436,7 +482,10 @@ class _IotDashboardScreenState extends State<IotDashboardScreen>
                 Expanded(
                   child: Text(
                     device.name,
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
                   ),
                 ),
                 _buildDeviceStateBadge(state, lang),
@@ -447,7 +496,10 @@ class _IotDashboardScreenState extends State<IotDashboardScreen>
               children: [
                 Text(
                   mainValue,
-                  style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                    fontSize: 32,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 Text(
                   unit,
@@ -458,8 +510,13 @@ class _IotDashboardScreenState extends State<IotDashboardScreen>
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(
-                      tel != null ? _timeAgo(tel.receivedAt, lang) : lang.t('Never'),
-                      style: TextStyle(color: Colors.grey.shade500, fontSize: 12),
+                      tel != null
+                          ? _timeAgo(tel.receivedAt, lang)
+                          : lang.t('Never'),
+                      style: TextStyle(
+                        color: Colors.grey.shade500,
+                        fontSize: 12,
+                      ),
                     ),
                   ],
                 ),
@@ -471,9 +528,15 @@ class _IotDashboardScreenState extends State<IotDashboardScreen>
     );
   }
 
-  Widget _buildActuatorCard(IoTDevice device, IoTProvider iot, LanguageProvider lang) {
-    final isOnline = device.state == DeviceState.LIVE || device.state == DeviceState.STALE;
-    final isRunning = device.currentPumpState == 'ON' || device.currentValveState == 'ON';
+  Widget _buildActuatorCard(
+    IoTDevice device,
+    IoTProvider iot,
+    LanguageProvider lang,
+  ) {
+    final isOnline =
+        device.state == DeviceState.LIVE || device.state == DeviceState.STALE;
+    final isRunning =
+        device.currentPumpState == 'ON' || device.currentValveState == 'ON';
     final cmdState = iot.getCommandStateForDevice(device.id);
 
     return Card(
@@ -490,7 +553,10 @@ class _IotDashboardScreenState extends State<IotDashboardScreen>
                 Expanded(
                   child: Text(
                     device.name,
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
                   ),
                 ),
                 _buildDeviceStateBadge(device.state, lang),
@@ -505,38 +571,62 @@ class _IotDashboardScreenState extends State<IotDashboardScreen>
                   children: [
                     Text(
                       lang.t('Status'),
-                      style: TextStyle(color: Colors.grey.shade500, fontSize: 12),
+                      style: TextStyle(
+                        color: Colors.grey.shade500,
+                        fontSize: 12,
+                      ),
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      device.currentPumpState == null ? lang.t('UNKNOWN') : (isRunning ? lang.t('RUNNING') : lang.t('OFF')),
+                      device.currentPumpState == null
+                          ? lang.t('UNKNOWN')
+                          : (isRunning ? lang.t('RUNNING') : lang.t('OFF')),
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
-                        color: device.currentPumpState == null ? Colors.grey : (isRunning ? Colors.blue : Colors.black87),
+                        color: device.currentPumpState == null
+                            ? Colors.grey
+                            : (isRunning ? Colors.blue : Colors.black87),
                       ),
                     ),
                   ],
                 ),
-                if (cmdState != null && cmdState != CommandState.COMPLETED && cmdState != CommandState.FAILED && cmdState != CommandState.REJECTED)
+                if (cmdState != null &&
+                    cmdState != CommandState.COMPLETED &&
+                    cmdState != CommandState.FAILED &&
+                    cmdState != CommandState.REJECTED)
                   Row(
                     children: [
-                      const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)),
+                      const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
                       const SizedBox(width: 8),
                       Text(
                         cmdState.name,
-                        style: const TextStyle(color: Colors.orange, fontWeight: FontWeight.bold, fontSize: 12),
+                        style: const TextStyle(
+                          color: Colors.orange,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
+                        ),
                       ),
                     ],
                   )
                 else
                   ElevatedButton.icon(
-                    onPressed: (isOnline && !iot.emergencyStop) ? () => iot.toggleDevice(device.id, 'user_manual') : null,
+                    onPressed: (isOnline && !iot.emergencyStop)
+                        ? () => iot.toggleDevice(device.id, 'user_manual')
+                        : null,
                     icon: Icon(isRunning ? Icons.stop : Icons.play_arrow),
                     label: Text(isRunning ? lang.t('Stop') : lang.t('Start')),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: isRunning ? Colors.red.shade50 : Colors.green.shade50,
-                      foregroundColor: isRunning ? Colors.red : Colors.green.shade700,
+                      backgroundColor: isRunning
+                          ? Colors.red.shade50
+                          : Colors.green.shade50,
+                      foregroundColor: isRunning
+                          ? Colors.red
+                          : Colors.green.shade700,
                       elevation: 0,
                     ),
                   ),
@@ -580,12 +670,20 @@ class _IotDashboardScreenState extends State<IotDashboardScreen>
       ),
       child: Text(
         lang.t(text),
-        style: TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.bold),
+        style: TextStyle(
+          color: color,
+          fontSize: 10,
+          fontWeight: FontWeight.bold,
+        ),
       ),
     );
   }
 
-  void _showAlerts(BuildContext context, IoTProvider iot, LanguageProvider lang) {
+  void _showAlerts(
+    BuildContext context,
+    IoTProvider iot,
+    LanguageProvider lang,
+  ) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -605,7 +703,10 @@ class _IotDashboardScreenState extends State<IotDashboardScreen>
                 children: [
                   Text(
                     lang.t('Alerts'),
-                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   const Spacer(),
                   if (iot.alerts.isNotEmpty)
@@ -661,10 +762,10 @@ class _IotDashboardScreenState extends State<IotDashboardScreen>
                                 alert.deviceId == 'ai-agent'
                                     ? Icons.auto_awesome
                                     : alert.severity == 'CRITICAL'
-                                        ? Icons.error
-                                        : alert.severity == 'WARNING'
-                                            ? Icons.warning
-                                            : Icons.info,
+                                    ? Icons.error
+                                    : alert.severity == 'WARNING'
+                                    ? Icons.warning
+                                    : Icons.info,
                                 color: color,
                                 size: 20,
                               ),
@@ -673,12 +774,17 @@ class _IotDashboardScreenState extends State<IotDashboardScreen>
                               alert.message,
                               style: TextStyle(
                                 fontSize: 13,
-                                fontWeight: alert.isRead ? FontWeight.normal : FontWeight.w600,
+                                fontWeight: alert.isRead
+                                    ? FontWeight.normal
+                                    : FontWeight.w600,
                               ),
                             ),
                             subtitle: Text(
                               '${alert.deviceId} • ${_timeAgo(alert.createdAt, lang)}',
-                              style: TextStyle(fontSize: 11, color: Colors.grey.shade500),
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: Colors.grey.shade500,
+                              ),
                             ),
                             onTap: () => iot.markAlertRead(alert.id),
                           ),
@@ -712,7 +818,11 @@ class _IotDashboardScreenState extends State<IotDashboardScreen>
             children: [
               const Icon(Icons.qr_code_scanner, size: 64, color: Colors.grey),
               const SizedBox(height: 16),
-              Text(lang.t('Scan the QR code on your IoT sensor or actuator to pair it with this farm.')),
+              Text(
+                lang.t(
+                  'Scan the QR code on your IoT sensor or actuator to pair it with this farm.',
+                ),
+              ),
             ],
           ),
           actions: [
@@ -737,5 +847,4 @@ class _IotDashboardScreenState extends State<IotDashboardScreen>
       },
     );
   }
-
 }

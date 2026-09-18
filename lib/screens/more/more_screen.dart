@@ -21,7 +21,7 @@ class _MoreScreenState extends State<MoreScreen> {
     final user = Provider.of<AuthProvider>(context).currentUser;
     final iot = Provider.of<IoTProvider>(context);
     final langProvider = Provider.of<LanguageProvider>(context);
-    
+
     String t(String key) => langProvider.t(key);
 
     return Scaffold(
@@ -135,7 +135,6 @@ class _MoreScreenState extends State<MoreScreen> {
           ),
           const SizedBox(height: 8),
 
-          
           _buildTile(
             context,
             icon: Icons.vpn_key,
@@ -280,7 +279,9 @@ class _MoreScreenState extends State<MoreScreen> {
 
   void _showApiKeysDialog(BuildContext context, LanguageProvider lang) {
     final geminiCtrl = TextEditingController(text: ApiKeys.geminiKey);
-    final tsChannelCtrl = TextEditingController(text: ApiKeys.thingSpeakChannelId);
+    final tsChannelCtrl = TextEditingController(
+      text: ApiKeys.thingSpeakChannelId,
+    );
     final tsKeyCtrl = TextEditingController(text: ApiKeys.thingSpeakReadKey);
 
     showDialog(
@@ -340,5 +341,4 @@ class _MoreScreenState extends State<MoreScreen> {
       ),
     );
   }
-
 }

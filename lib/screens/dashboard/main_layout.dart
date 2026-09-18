@@ -79,7 +79,9 @@ class _MainLayoutState extends State<MainLayout> {
               label: Text('${iot.unreadAlertCount}'),
               child: const Icon(Icons.sensors),
             ),
-            label: lang.t('IoT'), // Keep IoT as IoT or add translation if needed
+            label: lang.t(
+              'IoT',
+            ), // Keep IoT as IoT or add translation if needed
           ),
           NavigationDestination(
             icon: const Icon(Icons.grass_outlined),

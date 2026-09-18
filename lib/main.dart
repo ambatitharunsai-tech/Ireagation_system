@@ -62,11 +62,66 @@ class SmartAgriApp extends StatelessWidget {
         fontFamily: 'Outfit',
         scaffoldBackgroundColor: const Color(0xFFF8F9FA),
         cardTheme: CardThemeData(
-          elevation: 0,
+          elevation: 2,
+          shadowColor: Colors.black.withValues(alpha: 0.1),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
-            side: BorderSide(color: Colors.grey.shade200),
+            side: BorderSide(color: Colors.grey.shade200, width: 0.5),
           ),
+        ),
+        floatingActionButtonTheme: FloatingActionButtonThemeData(
+          elevation: 4,
+          highlightElevation: 8,
+          backgroundColor: const Color(0xFF0F9D58),
+          foregroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+        ),
+        inputDecorationTheme: InputDecorationTheme(
+          filled: true,
+          fillColor: Colors.grey.shade50,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: Colors.grey.shade300),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: Colors.grey.shade300),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: Color(0xFF0F9D58), width: 2),
+          ),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 16,
+          ),
+        ),
+
+        navigationBarTheme: NavigationBarThemeData(
+          backgroundColor: Colors.white,
+          indicatorColor: const Color(0xFF0F9D58).withValues(alpha: 0.2),
+          labelTextStyle: WidgetStateProperty.resolveWith((states) {
+            if (states.contains(WidgetState.selected)) {
+              return const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 12,
+                color: Color(0xFF0F9D58),
+              );
+            }
+            return const TextStyle(
+              fontWeight: FontWeight.w500,
+              fontSize: 12,
+              color: Colors.black54,
+            );
+          }),
+          iconTheme: WidgetStateProperty.resolveWith((states) {
+            if (states.contains(WidgetState.selected)) {
+              return const IconThemeData(color: Color(0xFF0F9D58), size: 26);
+            }
+            return const IconThemeData(color: Colors.black54, size: 24);
+          }),
         ),
         appBarTheme: const AppBarTheme(
           centerTitle: false,

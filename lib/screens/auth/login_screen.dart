@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
 import '../../providers/language_provider.dart';
 
 import '../../providers/auth_provider.dart';
@@ -54,7 +55,9 @@ class _LoginScreenState extends State<LoginScreen> {
               Text(lang.t(message), textAlign: TextAlign.center),
               const SizedBox(height: 16),
               Text(
-                lang.t('You can use Demo Mode to explore all features without an account.'),
+                lang.t(
+                  'You can use Demo Mode to explore all features without an account.',
+                ),
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
               ),
@@ -180,7 +183,9 @@ class _LoginScreenState extends State<LoginScreen> {
                                   return lang.t('Enter password');
                                 }
                                 if (v.length < 6) {
-                                  return lang.t('Password must be at least 6 characters');
+                                  return lang.t(
+                                    'Password must be at least 6 characters',
+                                  );
                                 }
                                 return null;
                               },

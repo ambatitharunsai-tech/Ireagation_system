@@ -10,7 +10,9 @@ import '../../models/crop_profile.dart';
 import '../../services/weather_service.dart';
 import '../../services/agronomic_engine.dart';
 import '../../services/ai_vision_service.dart';
+
 import 'package:image_picker/image_picker.dart';
+
 import '../../providers/language_provider.dart';
 import '../../database/daos/crop_dao.dart';
 import '../../widgets/add_crop_dialog.dart';
@@ -25,12 +27,10 @@ class CropDetailScreen extends StatefulWidget {
 }
 
 class _CropDetailScreenState extends State<CropDetailScreen> {
-
   bool _isLoadingHarvests = true;
   List<Harvest> _harvests = [];
   bool _isLoadingHistory = true;
   List<CropStageHistory> _history = [];
-
 
   @override
   void initState() {
@@ -38,7 +38,6 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
     _loadHarvests();
     _loadHistory();
   }
-
 
   Future<void> _loadHistory() async {
     final farm = Provider.of<FarmProvider>(context, listen: false);
@@ -86,7 +85,9 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
               },
             ),
           ],
-          bottom: TabBar(isScrollable: true, tabAlignment: TabAlignment.start,
+          bottom: TabBar(
+            isScrollable: true,
+            tabAlignment: TabAlignment.start,
             tabs: [
               Tab(text: lang.t('Overview')),
               Tab(text: lang.t('Timeline')),
@@ -302,14 +303,20 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
     if (_isLoadingHistory) {
       return const Center(child: CircularProgressIndicator());
     }
-    
+
     if (_history.isNotEmpty) {
       return ListView.builder(
         padding: const EdgeInsets.all(24),
         itemCount: _history.length,
         itemBuilder: (ctx, i) {
           final h = _history[i];
-          return _timelineNode(lang, h.newStage, h.changedAt, true, isLast: i == _history.length - 1);
+          return _timelineNode(
+            lang,
+            h.newStage,
+            h.changedAt,
+            true,
+            isLast: i == _history.length - 1,
+          );
         },
       );
     }
@@ -317,17 +324,38 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
     if (crop.sowingDate == null) {
       return Center(child: Text(lang.t('Stage history unavailable')));
     }
-    
+
     return ListView(
       padding: const EdgeInsets.all(24),
       children: [
         _timelineNode(lang, 'Planting', crop.sowingDate, true),
-        _timelineNode(lang, 'Seedling', crop.sowingDate?.add(const Duration(days: 14)), crop.growthStage == 'Seedling' || crop.growthStage != null),
-        _timelineNode(lang, 'Vegetative', null, crop.growthStage == 'Vegetative'),
+        _timelineNode(
+          lang,
+          'Seedling',
+          crop.sowingDate?.add(const Duration(days: 14)),
+          crop.growthStage == 'Seedling' || crop.growthStage != null,
+        ),
+        _timelineNode(
+          lang,
+          'Vegetative',
+          null,
+          crop.growthStage == 'Vegetative',
+        ),
         _timelineNode(lang, 'Flowering', null, crop.growthStage == 'Flowering'),
         _timelineNode(lang, 'Fruiting', null, crop.growthStage == 'Fruiting'),
-        _timelineNode(lang, 'Maturity', crop.expectedHarvestDate, crop.growthStage == 'Harvest Ready'),
-        _timelineNode(lang, 'Harvested', crop.status == 'Harvested' ? DateTime.now() : null, crop.status == 'Harvested', isLast: true),
+        _timelineNode(
+          lang,
+          'Maturity',
+          crop.expectedHarvestDate,
+          crop.growthStage == 'Harvest Ready',
+        ),
+        _timelineNode(
+          lang,
+          'Harvested',
+          crop.status == 'Harvested' ? DateTime.now() : null,
+          crop.status == 'Harvested',
+          isLast: true,
+        ),
       ],
     );
   }
@@ -492,12 +520,18 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
 
   Widget _buildSensorsTab(LanguageProvider lang, Crop crop) {
     final iot = Provider.of<IoTProvider>(context);
-    final devices = iot.devices.where((d) => d.deviceType.contains('moisture') || d.deviceType.contains('temp')).toList();
-    
+    final devices = iot.devices
+        .where(
+          (d) =>
+              d.deviceType.contains('moisture') ||
+              d.deviceType.contains('temp'),
+        )
+        .toList();
+
     if (devices.isEmpty) {
       return Center(child: Text(lang.t('No sensor data available.')));
     }
-    
+
     return ListView.builder(
       padding: const EdgeInsets.all(16),
       itemCount: devices.length,
@@ -505,12 +539,21 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
         final d = devices[i];
         return Card(
           child: ListTile(
-            leading: Icon(d.deviceType.contains('moisture') ? Icons.water_drop : Icons.thermostat),
+            leading: Icon(
+              d.deviceType.contains('moisture')
+                  ? Icons.water_drop
+                  : Icons.thermostat,
+            ),
             title: Text(d.name),
             subtitle: Text(d.isOnline ? 'LIVE' : 'OFFLINE'),
             trailing: Text(
-              d.latestTelemetry != null ? '${d.latestTelemetry!.soilMoisture ?? d.latestTelemetry!.temperature ?? '0.0'}' : 'UNAVAILABLE',
-              style: TextStyle(fontWeight: FontWeight.bold, color: d.isOnline ? Colors.green : Colors.grey),
+              d.latestTelemetry != null
+                  ? '${d.latestTelemetry!.soilMoisture ?? d.latestTelemetry!.temperature ?? '0.0'}'
+                  : 'UNAVAILABLE',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: d.isOnline ? Colors.green : Colors.grey,
+              ),
             ),
           ),
         );
@@ -521,11 +564,11 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
   Widget _buildWeatherTab(LanguageProvider lang, Crop crop) {
     final weather = Provider.of<WeatherProvider>(context);
     final current = weather.currentWeather;
-    
+
     if (current == null) {
       return Center(child: Text(lang.t('Weather unavailable')));
     }
-    
+
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -551,7 +594,6 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
     );
   }
 
-
   Widget _buildTasksTab(LanguageProvider lang, Crop crop) {
     final farm = Provider.of<FarmProvider>(context);
     final cropTasks = farm.tasks.where((t) => t.cropId == crop.id).toList();
@@ -574,10 +616,17 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
             ),
             title: Text(
               t.title,
-              style: TextStyle(decoration: isDone ? TextDecoration.lineThrough : null),
+              style: TextStyle(
+                decoration: isDone ? TextDecoration.lineThrough : null,
+              ),
             ),
             subtitle: Text(t.date),
-            trailing: Text(t.priority, style: TextStyle(color: t.priority == 'High' ? Colors.red : Colors.grey)),
+            trailing: Text(
+              t.priority,
+              style: TextStyle(
+                color: t.priority == 'High' ? Colors.red : Colors.grey,
+              ),
+            ),
           ),
         );
       },
@@ -586,11 +635,19 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
 
   Widget _buildFinanceTab(LanguageProvider lang, Crop crop) {
     final finance = Provider.of<FinanceProvider>(context);
-    final cropExpenses = finance.expenses.where((e) => e.cropId == crop.id).toList();
+    final cropExpenses = finance.expenses
+        .where((e) => e.cropId == crop.id)
+        .toList();
     final cropSales = finance.sales.where((s) => s.cropId == crop.id).toList();
 
-    final totalExpenses = cropExpenses.fold<double>(0, (sum, e) => sum + e.amount);
-    final totalSales = cropSales.fold<double>(0, (sum, s) => sum + (s.quantity * s.price));
+    final totalExpenses = cropExpenses.fold<double>(
+      0,
+      (sum, e) => sum + e.amount,
+    );
+    final totalSales = cropSales.fold<double>(
+      0,
+      (sum, s) => sum + (s.quantity * s.price),
+    );
     final netProfit = totalSales - totalExpenses;
 
     return ListView(
@@ -602,14 +659,19 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
             padding: const EdgeInsets.all(16),
             child: Column(
               children: [
-                Text(lang.t('Net Profit'), style: const TextStyle(fontSize: 16)),
+                Text(
+                  lang.t('Net Profit'),
+                  style: const TextStyle(fontSize: 16),
+                ),
                 const SizedBox(height: 8),
                 Text(
                   '\$${netProfit.toStringAsFixed(2)}',
                   style: TextStyle(
                     fontSize: 28,
                     fontWeight: FontWeight.bold,
-                    color: netProfit >= 0 ? Colors.green.shade800 : Colors.red.shade800,
+                    color: netProfit >= 0
+                        ? Colors.green.shade800
+                        : Colors.red.shade800,
                   ),
                 ),
               ],
@@ -623,7 +685,13 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
               child: Card(
                 child: ListTile(
                   title: Text(lang.t('Sales')),
-                  subtitle: Text('\$${totalSales.toStringAsFixed(2)}', style: const TextStyle(color: Colors.green, fontWeight: FontWeight.bold)),
+                  subtitle: Text(
+                    '\$${totalSales.toStringAsFixed(2)}',
+                    style: const TextStyle(
+                      color: Colors.green,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -631,7 +699,13 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
               child: Card(
                 child: ListTile(
                   title: Text(lang.t('Expenses')),
-                  subtitle: Text('\$${totalExpenses.toStringAsFixed(2)}', style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+                  subtitle: Text(
+                    '\$${totalExpenses.toStringAsFixed(2)}',
+                    style: const TextStyle(
+                      color: Colors.red,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -639,26 +713,41 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
         ),
         const SizedBox(height: 16),
         if (cropSales.isNotEmpty) ...[
-          Text(lang.t('Recent Sales'), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-          ...cropSales.take(3).map((s) => ListTile(
-            leading: const Icon(Icons.arrow_upward, color: Colors.green),
-            title: Text('${s.quantity} kg to ${s.buyer ?? 'Unknown'}'),
-            trailing: Text('\$${(s.quantity * s.price).toStringAsFixed(2)}'),
-          )),
+          Text(
+            lang.t('Recent Sales'),
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+          ),
+          ...cropSales
+              .take(3)
+              .map(
+                (s) => ListTile(
+                  leading: const Icon(Icons.arrow_upward, color: Colors.green),
+                  title: Text('${s.quantity} kg to ${s.buyer ?? 'Unknown'}'),
+                  trailing: Text(
+                    '\$${(s.quantity * s.price).toStringAsFixed(2)}',
+                  ),
+                ),
+              ),
           const Divider(),
         ],
         if (cropExpenses.isNotEmpty) ...[
-          Text(lang.t('Recent Expenses'), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-          ...cropExpenses.take(3).map((e) => ListTile(
-            leading: const Icon(Icons.arrow_downward, color: Colors.red),
-            title: Text(e.category),
-            trailing: Text('\$${e.amount.toStringAsFixed(2)}'),
-          )),
+          Text(
+            lang.t('Recent Expenses'),
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+          ),
+          ...cropExpenses
+              .take(3)
+              .map(
+                (e) => ListTile(
+                  leading: const Icon(Icons.arrow_downward, color: Colors.red),
+                  title: Text(e.category),
+                  trailing: Text('\$${e.amount.toStringAsFixed(2)}'),
+                ),
+              ),
         ],
       ],
     );
   }
-
 
   String _aiDiagnosis = '';
   bool _isAnalyzing = false;
@@ -667,14 +756,16 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
     final weather = Provider.of<WeatherProvider>(context);
     final forecast = weather.forecast;
     final current = weather.currentWeather;
-    
+
     CropProfile? profile;
     if (defaultCropProfiles.containsKey(crop.name)) {
       profile = defaultCropProfiles[crop.name];
     }
 
     if (profile == null) {
-      return Center(child: Text(lang.t('Intelligence not available for this crop type.')));
+      return Center(
+        child: Text(lang.t('Intelligence not available for this crop type.')),
+      );
     }
 
     List<String> diseaseRisks = [];
@@ -684,7 +775,14 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
 
     double? etc;
     if (current != null) {
-      etc = AgronomicEngine.calculateETc(profile, crop.growthStage, current, forecast.isNotEmpty ? forecast.first : DailyForecast(date: DateTime.now(), tempMax: 30, tempMin: 15));
+      etc = AgronomicEngine.calculateETc(
+        profile,
+        crop.growthStage,
+        current,
+        forecast.isNotEmpty
+            ? forecast.first
+            : DailyForecast(date: DateTime.now(), tempMax: 30, tempMin: 15),
+      );
     }
 
     return ListView(
@@ -696,11 +794,18 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
             child: ListTile(
               leading: const Icon(Icons.water_drop, color: Colors.blue),
               title: Text(lang.t('Evapotranspiration (ETc)')),
-              subtitle: Text(lang.t('Estimated water loss today: ${etc.toStringAsFixed(2)} mm')),
+              subtitle: Text(
+                lang.t(
+                  'Estimated water loss today: ${etc.toStringAsFixed(2)} mm',
+                ),
+              ),
             ),
           ),
         const SizedBox(height: 16),
-        Text(lang.t('Disease & Frost Risks'), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+        Text(
+          lang.t('Disease & Frost Risks'),
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+        ),
         const SizedBox(height: 8),
         if (diseaseRisks.isEmpty)
           ListTile(
@@ -708,15 +813,20 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
             title: Text(lang.t('No imminent weather-related risks detected.')),
           )
         else
-          ...diseaseRisks.map((risk) => Card(
-            color: Colors.orange.shade50,
-            child: ListTile(
-              leading: const Icon(Icons.warning, color: Colors.orange),
-              title: Text(risk),
+          ...diseaseRisks.map(
+            (risk) => Card(
+              color: Colors.orange.shade50,
+              child: ListTile(
+                leading: const Icon(Icons.warning, color: Colors.orange),
+                title: Text(risk),
+              ),
             ),
-          )),
+          ),
         const Divider(height: 32),
-        Text(lang.t('AI Visual Diagnosis'), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+        Text(
+          lang.t('AI Visual Diagnosis'),
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+        ),
         const SizedBox(height: 8),
         if (_isAnalyzing)
           const Padding(
@@ -731,7 +841,10 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
               final picker = ImagePicker();
               final xFile = await picker.pickImage(source: ImageSource.camera);
               if (xFile != null) {
-                setState(() { _isAnalyzing = true; _aiDiagnosis = ''; });
+                setState(() {
+                  _isAnalyzing = true;
+                  _aiDiagnosis = '';
+                });
                 final ai = AiVisionService();
                 final result = await ai.analyzeCropImage(xFile);
                 if (mounted) {
@@ -758,5 +871,4 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
       ],
     );
   }
-
 }

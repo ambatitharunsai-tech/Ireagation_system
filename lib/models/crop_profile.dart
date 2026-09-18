@@ -1,6 +1,6 @@
 class CropProfile {
   final String name;
-  
+
   // Basic Optimal ranges
   final int optimalTempMin;
   final int optimalTempMax;
@@ -67,33 +67,57 @@ class CropProfile {
 
 const defaultCropProfiles = {
   'Wheat': CropProfile(
-    name: 'Wheat', 
-    optimalTempMin: 15, optimalTempMax: 25, 
-    optimalMoistureMin: 40, optimalMoistureMax: 70,
-    baseTemperature: 4.0, maxTemperatureGDD: 30.0, gddToMaturity: 1600,
-    kcInitial: 0.3, kcMid: 1.15, kcEnd: 0.25,
+    name: 'Wheat',
+    optimalTempMin: 15,
+    optimalTempMax: 25,
+    optimalMoistureMin: 40,
+    optimalMoistureMax: 70,
+    baseTemperature: 4.0,
+    maxTemperatureGDD: 30.0,
+    gddToMaturity: 1600,
+    kcInitial: 0.3,
+    kcMid: 1.15,
+    kcEnd: 0.25,
     susceptibleToHighHumidity: true, // Rust
     susceptibleToFrost: false,
-    nDepletionPerKg: 20.0, pDepletionPerKg: 8.0, kDepletionPerKg: 15.0,
+    nDepletionPerKg: 20.0,
+    pDepletionPerKg: 8.0,
+    kDepletionPerKg: 15.0,
   ),
   'Rice': CropProfile(
-    name: 'Rice', 
-    optimalTempMin: 20, optimalTempMax: 35, 
-    optimalMoistureMin: 60, optimalMoistureMax: 90,
-    baseTemperature: 10.0, maxTemperatureGDD: 35.0, gddToMaturity: 2200,
-    kcInitial: 1.05, kcMid: 1.20, kcEnd: 0.90,
+    name: 'Rice',
+    optimalTempMin: 20,
+    optimalTempMax: 35,
+    optimalMoistureMin: 60,
+    optimalMoistureMax: 90,
+    baseTemperature: 10.0,
+    maxTemperatureGDD: 35.0,
+    gddToMaturity: 2200,
+    kcInitial: 1.05,
+    kcMid: 1.20,
+    kcEnd: 0.90,
     susceptibleToHighHumidity: true, // Blast
     susceptibleToFrost: true,
-    nDepletionPerKg: 15.0, pDepletionPerKg: 6.0, kDepletionPerKg: 18.0,
+    nDepletionPerKg: 15.0,
+    pDepletionPerKg: 6.0,
+    kDepletionPerKg: 18.0,
   ),
   'Tomato': CropProfile(
-    name: 'Tomato', 
-    optimalTempMin: 18, optimalTempMax: 28, 
-    optimalMoistureMin: 50, optimalMoistureMax: 75,
-    baseTemperature: 10.0, maxTemperatureGDD: 32.0, gddToMaturity: 1300,
-    kcInitial: 0.6, kcMid: 1.15, kcEnd: 0.80,
+    name: 'Tomato',
+    optimalTempMin: 18,
+    optimalTempMax: 28,
+    optimalMoistureMin: 50,
+    optimalMoistureMax: 75,
+    baseTemperature: 10.0,
+    maxTemperatureGDD: 32.0,
+    gddToMaturity: 1300,
+    kcInitial: 0.6,
+    kcMid: 1.15,
+    kcEnd: 0.80,
     susceptibleToHighHumidity: true, // Blight
     susceptibleToFrost: true,
-    nDepletionPerKg: 2.5, pDepletionPerKg: 0.5, kDepletionPerKg: 3.5, // per kg of fresh fruit
+    nDepletionPerKg: 2.5,
+    pDepletionPerKg: 0.5,
+    kDepletionPerKg: 3.5, // per kg of fresh fruit
   ),
 };

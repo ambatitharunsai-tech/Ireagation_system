@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
 import '../../providers/language_provider.dart';
 
 import '../../providers/farm_provider.dart';
@@ -55,7 +56,11 @@ class TaskScreen extends StatelessWidget {
               padding: const EdgeInsets.all(16),
               children: [
                 if (pending.isNotEmpty) ...[
-                  _buildSectionHeader(lang.t('Pending'), pending.length, Colors.orange),
+                  _buildSectionHeader(
+                    lang.t('Pending'),
+                    pending.length,
+                    Colors.orange,
+                  ),
                   ...pending.map((t) => _buildTaskCard(context, t, farm, lang)),
                   const SizedBox(height: 16),
                 ],
@@ -65,16 +70,23 @@ class TaskScreen extends StatelessWidget {
                     inProgress.length,
                     Colors.blue,
                   ),
-                  ...inProgress.map((t) => _buildTaskCard(context, t, farm, lang)),
+                  ...inProgress.map(
+                    (t) => _buildTaskCard(context, t, farm, lang),
+                  ),
                   const SizedBox(height: 16),
                 ],
                 if (done.isNotEmpty) ...[
-                  _buildSectionHeader(lang.t('Done'), done.length, Colors.green),
+                  _buildSectionHeader(
+                    lang.t('Done'),
+                    done.length,
+                    Colors.green,
+                  ),
                   ...done.map((t) => _buildTaskCard(context, t, farm, lang)),
                 ],
               ],
             ),
-      floatingActionButton: FloatingActionButton.extended( heroTag: "tasks_fab",
+      floatingActionButton: FloatingActionButton.extended(
+        heroTag: "tasks_fab",
         onPressed: () => AddTaskDialog.show(context),
         icon: const Icon(Icons.add),
         label: Text(lang.t('Add Task')),

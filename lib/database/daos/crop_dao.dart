@@ -191,7 +191,6 @@ class Harvest {
   }
 }
 
-
 class CropStageHistory {
   final String id;
   final String cropId;
@@ -219,13 +218,14 @@ class CropStageHistory {
       oldStage: map['old_stage']?.toString(),
       newStage: map['new_stage']?.toString() ?? '',
       notes: map['notes']?.toString(),
-      changedAt: map['changed_at'] != null ? DateTime.tryParse(map['changed_at'].toString()) ?? DateTime.now() : DateTime.now(),
+      changedAt: map['changed_at'] != null
+          ? DateTime.tryParse(map['changed_at'].toString()) ?? DateTime.now()
+          : DateTime.now(),
     );
   }
 }
 
 class CropDao {
-
   final LocalDatabase _db = LocalDatabase.instance;
 
   Future<Crop> insertCrop(Crop crop) async {
