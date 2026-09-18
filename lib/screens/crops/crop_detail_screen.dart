@@ -6,6 +6,11 @@ import '../../providers/farm_provider.dart';
 import '../../providers/finance_provider.dart';
 import '../../providers/iot_provider.dart';
 import '../../providers/weather_provider.dart';
+import '../../models/crop_profile.dart';
+import '../../services/weather_service.dart';
+import '../../services/agronomic_engine.dart';
+import '../../services/ai_vision_service.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../providers/language_provider.dart';
 import '../../database/daos/crop_dao.dart';
 import '../../widgets/add_crop_dialog.dart';
@@ -68,7 +73,7 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
     if (crop.status == 'Harvested') statusColor = Colors.orange;
 
     return DefaultTabController(
-      length: 7,
+      length: 8,
       child: Scaffold(
         appBar: AppBar(
           title: Text(crop.name),
@@ -81,10 +86,11 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
               },
             ),
           ],
-          bottom: TabBar(
+          bottom: TabBar(isScrollable: true, tabAlignment: TabAlignment.start,
             tabs: [
               Tab(text: lang.t('Overview')),
               Tab(text: lang.t('Timeline')),
+              Tab(text: lang.t('Intelligence')),
               Tab(text: lang.t('Tasks')),
               Tab(text: lang.t('Finance')),
               Tab(text: lang.t('Harvests')),
@@ -97,6 +103,7 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
           children: [
             _buildOverviewTab(lang, crop, statusColor),
             _buildTimelineTab(lang, crop),
+            _buildIntelligenceTab(lang, crop),
             _buildTasksTab(lang, crop),
             _buildFinanceTab(lang, crop),
             _buildHarvestsTab(lang, crop),
@@ -647,6 +654,106 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
             title: Text(e.category),
             trailing: Text('\$${e.amount.toStringAsFixed(2)}'),
           )),
+        ],
+      ],
+    );
+  }
+
+
+  String _aiDiagnosis = '';
+  bool _isAnalyzing = false;
+
+  Widget _buildIntelligenceTab(LanguageProvider lang, Crop crop) {
+    final weather = Provider.of<WeatherProvider>(context);
+    final forecast = weather.forecast;
+    final current = weather.currentWeather;
+    
+    CropProfile? profile;
+    if (defaultCropProfiles.containsKey(crop.name)) {
+      profile = defaultCropProfiles[crop.name];
+    }
+
+    if (profile == null) {
+      return Center(child: Text(lang.t('Intelligence not available for this crop type.')));
+    }
+
+    List<String> diseaseRisks = [];
+    if (forecast.isNotEmpty) {
+      diseaseRisks = AgronomicEngine.assessDiseaseRisk(profile, forecast);
+    }
+
+    double? etc;
+    if (current != null) {
+      etc = AgronomicEngine.calculateETc(profile, crop.growthStage, current, forecast.isNotEmpty ? forecast.first : DailyForecast(date: DateTime.now(), tempMax: 30, tempMin: 15));
+    }
+
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        if (etc != null)
+          Card(
+            color: Colors.blue.shade50,
+            child: ListTile(
+              leading: const Icon(Icons.water_drop, color: Colors.blue),
+              title: Text(lang.t('Evapotranspiration (ETc)')),
+              subtitle: Text(lang.t('Estimated water loss today: ${etc.toStringAsFixed(2)} mm')),
+            ),
+          ),
+        const SizedBox(height: 16),
+        Text(lang.t('Disease & Frost Risks'), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+        const SizedBox(height: 8),
+        if (diseaseRisks.isEmpty)
+          ListTile(
+            leading: const Icon(Icons.check_circle, color: Colors.green),
+            title: Text(lang.t('No imminent weather-related risks detected.')),
+          )
+        else
+          ...diseaseRisks.map((risk) => Card(
+            color: Colors.orange.shade50,
+            child: ListTile(
+              leading: const Icon(Icons.warning, color: Colors.orange),
+              title: Text(risk),
+            ),
+          )),
+        const Divider(height: 32),
+        Text(lang.t('AI Visual Diagnosis'), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+        const SizedBox(height: 8),
+        if (_isAnalyzing)
+          const Padding(
+            padding: EdgeInsets.all(16.0),
+            child: Center(child: CircularProgressIndicator()),
+          )
+        else ...[
+          ElevatedButton.icon(
+            icon: const Icon(Icons.camera_alt),
+            label: Text(lang.t('Analyze Leaf Photo')),
+            onPressed: () async {
+              final picker = ImagePicker();
+              final xFile = await picker.pickImage(source: ImageSource.camera);
+              if (xFile != null) {
+                setState(() { _isAnalyzing = true; _aiDiagnosis = ''; });
+                final ai = AiVisionService();
+                final result = await ai.analyzeCropImage(xFile);
+                if (mounted) {
+                  setState(() {
+                    _isAnalyzing = false;
+                    _aiDiagnosis = result;
+                  });
+                }
+              }
+            },
+          ),
+          if (_aiDiagnosis.isNotEmpty)
+            Container(
+              margin: const EdgeInsets.only(top: 16),
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade100,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.grey.shade300),
+              ),
+              child: Text(_aiDiagnosis),
+            ),
         ],
       ],
     );
