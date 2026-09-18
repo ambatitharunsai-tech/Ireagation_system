@@ -134,7 +134,6 @@ class _AddCropDialogState extends State<AddCropDialog> {
           },
           child: const Text('Save'),
         ),
-        ),
       ],
     );
   }
