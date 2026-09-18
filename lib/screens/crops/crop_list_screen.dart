@@ -1,192 +1,457 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../providers/language_provider.dart';
+import 'package:intl/intl.dart';
 
 import '../../providers/farm_provider.dart';
+import '../../providers/auth_provider.dart';
+import '../../providers/language_provider.dart';
 import '../../database/daos/crop_dao.dart';
 import '../../widgets/add_crop_dialog.dart';
 
-class CropListScreen extends StatelessWidget {
+class CropListScreen extends StatefulWidget {
   const CropListScreen({super.key});
 
   @override
+  State<CropListScreen> createState() => _CropListScreenState();
+}
+
+class _CropListScreenState extends State<CropListScreen> {
+  String _searchQuery = '';
+  String _filterStatus = 'All';
+  String _sortOption = 'Newest';
+
+  @override
   Widget build(BuildContext context) {
-    final lang = Provider.of<LanguageProvider>(context);
     final farm = Provider.of<FarmProvider>(context);
-    final theme = Theme.of(context);
+    final auth = Provider.of<AuthProvider>(context, listen: false);
+    final lang = Provider.of<LanguageProvider>(context);
+
+    // Apply Filters & Search
+    List<Crop> displayedCrops = farm.crops.where((crop) {
+      if (_filterStatus != 'All' && crop.status != _filterStatus) {
+        return false;
+      }
+      if (_searchQuery.isNotEmpty) {
+        final query = _searchQuery.toLowerCase();
+        final matchName = crop.name.toLowerCase().contains(query);
+        final matchVariety = (crop.variety ?? '').toLowerCase().contains(query);
+        final matchSoil = (crop.soilType ?? '').toLowerCase().contains(query);
+        return matchName || matchVariety || matchSoil;
+      }
+      return true;
+    }).toList();
+
+    // Apply Sorting
+    displayedCrops.sort((a, b) {
+      switch (_sortOption) {
+        case 'Oldest':
+          return (a.createdAt ?? DateTime.now()).compareTo(
+            b.createdAt ?? DateTime.now(),
+          );
+        case 'Name A-Z':
+          return a.name.compareTo(b.name);
+        case 'Name Z-A':
+          return b.name.compareTo(a.name);
+        case 'Area':
+          return (b.area ?? 0).compareTo(a.area ?? 0);
+        case 'Expected Harvest':
+          if (a.expectedHarvestDate == null && b.expectedHarvestDate == null)
+            return 0;
+          if (a.expectedHarvestDate == null) return 1;
+          if (b.expectedHarvestDate == null) return -1;
+          return a.expectedHarvestDate!.compareTo(b.expectedHarvestDate!);
+        case 'Status':
+          return a.status.compareTo(b.status);
+        case 'Newest':
+        default:
+          return (b.createdAt ?? DateTime.now()).compareTo(
+            a.createdAt ?? DateTime.now(),
+          );
+      }
+    });
 
     return Scaffold(
       appBar: AppBar(
         title: Text(lang.t('My Crops')),
         actions: [
-          if (farm.crops.isNotEmpty)
+          if (farm.isOffline)
             Padding(
-              padding: const EdgeInsets.only(right: 16),
-              child: Center(
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.primaryContainer,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    '${farm.activeCropCount} ${lang.t('active')}',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: theme.colorScheme.onPrimaryContainer,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-        ],
-      ),
-      body: farm.crops.isEmpty
-          ? Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Row(
                 children: [
-                  Icon(Icons.grass, size: 80, color: Colors.grey.shade300),
-                  const SizedBox(height: 16),
+                  const Icon(Icons.cloud_off, size: 16, color: Colors.orange),
+                  const SizedBox(width: 8),
                   Text(
-                    lang.t('No crops yet'),
-                    style: TextStyle(fontSize: 18, color: Colors.grey.shade500),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(lang.t('Tap + to add your first crop')),
-                  const SizedBox(height: 24),
-                  FilledButton.icon(
-                    onPressed: () => AddCropDialog.show(context),
-                    icon: const Icon(Icons.add),
-                    label: Text(lang.t('Add Crop')),
+                    lang.t('Offline'),
+                    style: const TextStyle(color: Colors.orange),
                   ),
                 ],
               ),
-            )
-          : ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: farm.crops.length,
-              itemBuilder: (context, i) {
-                final crop = farm.crops[i];
-                return _buildCropCard(context, crop, farm, lang);
-              },
             ),
-      floatingActionButton: farm.crops.isNotEmpty
-          ? FloatingActionButton.extended(
-              onPressed: () => AddCropDialog.show(context),
-              icon: const Icon(Icons.add),
-              label: Text(lang.t('Add Crop')),
-            )
-          : null,
+        ],
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(130),
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              children: [
+                _buildSummaryCards(farm, lang),
+                const SizedBox(height: 12),
+                _buildSearchAndFilter(lang),
+              ],
+            ),
+          ),
+        ),
+      ),
+      body: farm.isLoadingCrops
+          ? const Center(child: CircularProgressIndicator())
+          : displayedCrops.isEmpty
+          ? _buildEmptyState(lang)
+          : RefreshIndicator(
+              onRefresh: () async {
+                if (auth.currentUser != null) {
+                  await farm.loadCrops(auth.currentUser!.id);
+                }
+              },
+              child: ListView.builder(
+                padding: const EdgeInsets.only(bottom: 80, top: 8),
+                itemCount: displayedCrops.length,
+                itemBuilder: (ctx, i) =>
+                    _buildCropCard(context, displayedCrops[i], farm, lang),
+              ),
+            ),
+      floatingActionButton: FloatingActionButton.extended(
+        heroTag: 'crops_fab',
+        onPressed: () => AddCropDialog.show(context),
+        icon: const Icon(Icons.add),
+        label: Text(lang.t('Add Crop')),
+      ),
     );
   }
 
-  Widget _buildCropCard(BuildContext context, Crop crop, FarmProvider farm, LanguageProvider lang) {
-    final isActive = crop.status == 'Active';
+  Widget _buildSummaryCards(FarmProvider farm, LanguageProvider lang) {
+    return Row(
+      children: [
+        Expanded(
+          child: _summaryCard(
+            lang.t('Total Crops'),
+            farm.crops.length.toString(),
+            Colors.blue,
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: _summaryCard(
+            lang.t('Active'),
+            farm.activeCropCount.toString(),
+            Colors.green,
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: _summaryCard(
+            lang.t('Harvested'),
+            farm.harvestedCropCount.toString(),
+            Colors.orange,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _summaryCard(String title, String count, Color color) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
+      ),
+      child: Column(
+        children: [
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              count,
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: color,
+              ),
+            ),
+          ),
+          const SizedBox(height: 4),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(title, style: TextStyle(fontSize: 12, color: color)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSearchAndFilter(LanguageProvider lang) {
+    return Row(
+      children: [
+        Expanded(
+          flex: 2,
+          child: TextField(
+            decoration: InputDecoration(
+              hintText: lang.t('Search crops...'),
+              prefixIcon: const Icon(Icons.search),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(30),
+              ),
+              filled: true,
+              fillColor: Colors.white,
+            ),
+            onChanged: (val) => setState(() => _searchQuery = val),
+          ),
+        ),
+        const SizedBox(width: 8),
+        PopupMenuButton<String>(
+          icon: const Icon(Icons.filter_list),
+          tooltip: lang.t('Filter'),
+          onSelected: (val) => setState(() => _filterStatus = val),
+          itemBuilder: (ctx) =>
+              ['All', 'Active', 'Harvested', 'Inactive'].map((s) {
+                return PopupMenuItem(
+                  value: s,
+                  child: Row(
+                    children: [
+                      Icon(
+                        s == _filterStatus ? Icons.check : Icons.circle,
+                        size: 16,
+                        color: s == _filterStatus
+                            ? Colors.green
+                            : Colors.transparent,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(lang.t(s)),
+                    ],
+                  ),
+                );
+              }).toList(),
+        ),
+        PopupMenuButton<String>(
+          icon: const Icon(Icons.sort),
+          tooltip: lang.t('Sort'),
+          onSelected: (val) => setState(() => _sortOption = val),
+          itemBuilder: (ctx) =>
+              [
+                'Newest',
+                'Oldest',
+                'Name A-Z',
+                'Name Z-A',
+                'Area',
+                'Expected Harvest',
+                'Status',
+              ].map((s) {
+                return PopupMenuItem(
+                  value: s,
+                  child: Row(
+                    children: [
+                      Icon(
+                        s == _sortOption ? Icons.check : Icons.circle,
+                        size: 16,
+                        color: s == _sortOption
+                            ? Colors.blue
+                            : Colors.transparent,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(lang.t(s)),
+                    ],
+                  ),
+                );
+              }).toList(),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildEmptyState(LanguageProvider lang) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.grass, size: 64, color: Colors.grey.shade300),
+          const SizedBox(height: 16),
+          Text(
+            lang.t('No crops found'),
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.grey.shade600,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            lang.t('Add your first crop to start managing your farm.'),
+            style: TextStyle(color: Colors.grey.shade500),
+          ),
+          const SizedBox(height: 24),
+          FilledButton.icon(
+            onPressed: () => AddCropDialog.show(context),
+            icon: const Icon(Icons.add),
+            label: Text(lang.t('Add Crop')),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCropCard(
+    BuildContext context,
+    Crop crop,
+    FarmProvider farm,
+    LanguageProvider lang,
+  ) {
+    final auth = Provider.of<AuthProvider>(context, listen: false);
+    Color statusColor = Colors.grey;
+    if (crop.status == 'Active') statusColor = Colors.green;
+    if (crop.status == 'Harvested') statusColor = Colors.orange;
 
     return Card(
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
         onTap: () => _showCropDetails(context, crop, lang),
         child: Padding(
           padding: const EdgeInsets.all(16),
-          child: Row(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Crop icon
-              Container(
-                width: 56,
-                height: 56,
-                decoration: BoxDecoration(
-                  color: isActive ? Colors.green.shade50 : Colors.grey.shade100,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(
-                  Icons.eco,
-                  color: isActive ? Colors.green : Colors.grey,
-                  size: 28,
-                ),
-              ),
-              const SizedBox(width: 16),
-
-              // Crop info
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Expanded(
-                          child: Text(
-                            crop.name,
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
+                        Text(
+                          crop.name,
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
                           ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: isActive
-                                ? Colors.green.shade50
-                                : Colors.orange.shade50,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            lang.t(crop.status),
+                        if (crop.variety != null)
+                          Text(
+                            crop.variety!,
                             style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.bold,
-                              color: isActive
-                                  ? Colors.green.shade700
-                                  : Colors.orange.shade700,
+                              color: Colors.grey.shade600,
+                              fontStyle: FontStyle.italic,
                             ),
                           ),
-                        ),
                       ],
                     ),
-                    const SizedBox(height: 6),
-                    Row(
-                      children: [
-                        _infoChip(
-                          Icons.timeline,
-                          crop.growthStage != null ? lang.t(crop.growthStage!) : lang.t('Unknown'),
-                        ),
-                        const SizedBox(width: 12),
-                        if (crop.area != null)
-                          _infoChip(Icons.square_foot, '${crop.area} ${lang.t('acres')}'),
-                      ],
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
                     ),
-                    if (crop.irrigationMethod != null) ...[
-                      const SizedBox(height: 4),
-                      _infoChip(Icons.water_drop, lang.t(crop.irrigationMethod!)),
+                    decoration: BoxDecoration(
+                      color: statusColor.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: statusColor.withValues(alpha: 0.5),
+                      ),
+                    ),
+                    child: Text(
+                      lang.t(crop.status),
+                      style: TextStyle(
+                        color: statusColor,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
+                  PopupMenuButton<String>(
+                    onSelected: (val) {
+                      if (val == 'edit') {
+                        AddCropDialog.show(context, crop: crop);
+                      } else if (val == 'delete') {
+                        _confirmDelete(
+                          context,
+                          crop,
+                          farm,
+                          lang,
+                          auth.currentUser!.id,
+                        );
+                      }
+                    },
+                    itemBuilder: (ctx) => [
+                      PopupMenuItem(
+                        value: 'edit',
+                        child: Row(
+                          children: [
+                            const Icon(Icons.edit, size: 20),
+                            const SizedBox(width: 8),
+                            Text(lang.t('Edit')),
+                          ],
+                        ),
+                      ),
+                      PopupMenuItem(
+                        value: 'delete',
+                        child: Row(
+                          children: [
+                            const Icon(
+                              Icons.delete,
+                              color: Colors.red,
+                              size: 20,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              lang.t('Delete'),
+                              style: const TextStyle(color: Colors.red),
+                            ),
+                          ],
+                        ),
+                      ),
                     ],
-                  ],
-                ),
+                  ),
+                ],
               ),
-
-              // Actions
-              PopupMenuButton<String>(
-                onSelected: (val) {
-                  if (val == 'delete') {
-                    _confirmDelete(context, crop, farm, lang);
-                  } else if (val == 'edit') {
-                    _showEditCropDialog(context, crop, farm, lang);
-                  }
-                },
-                itemBuilder: (ctx) => [
-                  PopupMenuItem(value: 'edit', child: Text(lang.t('Edit'))),
-                  const PopupMenuDivider(),
-                  PopupMenuItem(
-                    value: 'delete',
-                    child: Text(lang.t('Delete'), style: const TextStyle(color: Colors.red)),
+              const Divider(height: 24),
+              Wrap(
+                spacing: 16,
+                runSpacing: 12,
+                children: [
+                  _infoChip(
+                    Icons.eco,
+                    crop.growthStage != null
+                        ? lang.t(crop.growthStage!)
+                        : lang.t('Not set'),
+                  ),
+                  _infoChip(
+                    Icons.square_foot,
+                    crop.area != null
+                        ? '${crop.area} ${lang.t(crop.areaUnit ?? 'acres')}'
+                        : lang.t('Not set'),
+                  ),
+                  _infoChip(
+                    Icons.water_drop,
+                    crop.irrigationMethod != null
+                        ? lang.t(crop.irrigationMethod!)
+                        : lang.t('Not set'),
+                  ),
+                  _infoChip(
+                    Icons.calendar_today,
+                    crop.sowingDate != null
+                        ? DateFormat.yMMMd().format(crop.sowingDate!)
+                        : lang.t('Not set'),
+                  ),
+                  _infoChip(
+                    Icons.event,
+                    crop.expectedHarvestDate != null
+                        ? DateFormat.yMMMd().format(crop.expectedHarvestDate!)
+                        : lang.t('Not set'),
                   ),
                 ],
               ),
@@ -201,14 +466,18 @@ class CropListScreen extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 13, color: Colors.grey.shade500),
-        const SizedBox(width: 4),
-        Text(text, style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
+        Icon(icon, size: 14, color: Colors.grey.shade500),
+        const SizedBox(width: 6),
+        Text(text, style: TextStyle(fontSize: 13, color: Colors.grey.shade700)),
       ],
     );
   }
 
-  void _showCropDetails(BuildContext context, Crop crop, LanguageProvider lang) {
+  void _showCropDetails(
+    BuildContext context,
+    Crop crop,
+    LanguageProvider lang,
+  ) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -216,9 +485,9 @@ class CropListScreen extends StatelessWidget {
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (ctx) => DraggableScrollableSheet(
-        initialChildSize: 0.5,
-        minChildSize: 0.3,
-        maxChildSize: 0.8,
+        initialChildSize: 0.6,
+        minChildSize: 0.4,
+        maxChildSize: 0.9,
         expand: false,
         builder: (ctx, controller) => SingleChildScrollView(
           controller: controller,
@@ -236,37 +505,112 @@ class CropListScreen extends StatelessWidget {
                   ),
                 ),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 24),
               Text(
                 crop.name,
                 style: const TextStyle(
-                  fontSize: 24,
+                  fontSize: 28,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              const SizedBox(height: 16),
+              if (crop.variety != null)
+                Text(
+                  crop.variety!,
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.grey.shade600,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              const SizedBox(height: 24),
               _detailRow(lang.t('Status'), lang.t(crop.status)),
-              _detailRow(lang.t('Growth Stage'), crop.growthStage != null ? lang.t(crop.growthStage!) : lang.t('Not set')),
+              _detailRow(
+                lang.t('Growth Stage'),
+                crop.growthStage != null
+                    ? lang.t(crop.growthStage!)
+                    : lang.t('Not set'),
+              ),
               _detailRow(
                 lang.t('Area'),
-                crop.area != null ? '${crop.area} ${lang.t('acres')}' : lang.t('Not set'),
+                crop.area != null
+                    ? '${crop.area} ${lang.t(crop.areaUnit ?? 'acres')}'
+                    : lang.t('Not set'),
               ),
-              _detailRow(lang.t('Soil Type'), crop.soilType != null ? lang.t(crop.soilType!) : lang.t('Not set')),
-              _detailRow(lang.t('Irrigation'), crop.irrigationMethod != null ? lang.t(crop.irrigationMethod!) : lang.t('Not set')),
-              _detailRow(lang.t('Sowing Date'), crop.sowingDate ?? lang.t('Not set')),
+              _detailRow(
+                lang.t('Soil Type'),
+                crop.soilType != null
+                    ? lang.t(crop.soilType!)
+                    : lang.t('Not set'),
+              ),
+              _detailRow(
+                lang.t('Irrigation'),
+                crop.irrigationMethod != null
+                    ? lang.t(crop.irrigationMethod!)
+                    : lang.t('Not set'),
+              ),
+              _detailRow(
+                lang.t('Seed Source'),
+                crop.seedSource ?? lang.t('Not set'),
+              ),
+              _detailRow(
+                lang.t('Planting Density'),
+                crop.plantingDensity != null
+                    ? '${crop.plantingDensity}'
+                    : lang.t('Not set'),
+              ),
+              _detailRow(
+                lang.t('Sowing Date'),
+                crop.sowingDate != null
+                    ? DateFormat.yMMMd().format(crop.sowingDate!)
+                    : lang.t('Not set'),
+              ),
               _detailRow(
                 lang.t('Expected Harvest'),
-                crop.expectedHarvestDate ?? lang.t('Not set'),
+                crop.expectedHarvestDate != null
+                    ? DateFormat.yMMMd().format(crop.expectedHarvestDate!)
+                    : lang.t('Not set'),
               ),
+
+              const Divider(height: 32),
+
               if (crop.notes != null && crop.notes!.isNotEmpty) ...[
-                const SizedBox(height: 12),
                 Text(
                   lang.t('Notes'),
-                  style: const TextStyle(fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
                 ),
-                const SizedBox(height: 4),
-                Text(crop.notes!),
+                const SizedBox(height: 8),
+                Text(crop.notes!, style: const TextStyle(height: 1.4)),
+                const SizedBox(height: 16),
               ],
+
+              Text(
+                lang.t('System Details'),
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                  color: Colors.grey,
+                ),
+              ),
+              const SizedBox(height: 8),
+              _detailRow(
+                lang.t('Created'),
+                crop.createdAt != null
+                    ? DateFormat.yMMMd().add_jm().format(crop.createdAt!)
+                    : lang.t('Unknown'),
+                isGrey: true,
+              ),
+              _detailRow(
+                lang.t('Updated'),
+                crop.updatedAt != null
+                    ? DateFormat.yMMMd().add_jm().format(crop.updatedAt!)
+                    : lang.t('Unknown'),
+                isGrey: true,
+              ),
+
+              const SizedBox(height: 40),
             ],
           ),
         ),
@@ -274,19 +618,29 @@ class CropListScreen extends StatelessWidget {
     );
   }
 
-  Widget _detailRow(String label, String value) {
+  Widget _detailRow(String label, String value, {bool isGrey = false}) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
+      padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(
-            width: 120,
-            child: Text(label, style: TextStyle(color: Colors.grey.shade600)),
+            width: 140,
+            child: Text(
+              label,
+              style: TextStyle(
+                color: Colors.grey.shade600,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
           ),
           Expanded(
             child: Text(
               value,
-              style: const TextStyle(fontWeight: FontWeight.w500),
+              style: TextStyle(
+                fontWeight: FontWeight.w500,
+                color: isGrey ? Colors.grey.shade600 : Colors.black87,
+              ),
             ),
           ),
         ],
@@ -294,117 +648,68 @@ class CropListScreen extends StatelessWidget {
     );
   }
 
-  void _confirmDelete(BuildContext context, Crop crop, FarmProvider farm, LanguageProvider lang) {
+  void _confirmDelete(
+    BuildContext context,
+    Crop crop,
+    FarmProvider farm,
+    LanguageProvider lang,
+    String userId,
+  ) {
+    bool isDeleting = false;
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(lang.t('Delete Crop')),
-        content: Text(
-          '${lang.t('Are you sure you want to delete')} "${crop.name}"? ${lang.t('This action cannot be undone.')}',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text(lang.t('Cancel')),
-          ),
-          FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: Colors.red),
-            onPressed: () {
-              farm.deleteCrop(crop.id);
-              Navigator.pop(ctx);
-              ScaffoldMessenger.of(
-                context,
-              ).showSnackBar(SnackBar(content: Text('${crop.name} ${lang.t('deleted')}',)));
-            },
-            child: Text(lang.t('Delete')),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showEditCropDialog(BuildContext context, Crop crop, FarmProvider farm, LanguageProvider lang) {
-    final nameCtrl = TextEditingController(text: crop.name);
-    final areaCtrl = TextEditingController(text: crop.area?.toString() ?? '');
-    final notesCtrl = TextEditingController(text: crop.notes ?? '');
-    String growthStage = crop.growthStage ?? 'Seedling';
-    String status = crop.status;
-
-    showDialog(
-      context: context,
+      barrierDismissible: false,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setDialogState) => AlertDialog(
-          title: Text(lang.t('Edit Crop')),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: nameCtrl,
-                  decoration: InputDecoration(labelText: lang.t('Crop Name')),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: areaCtrl,
-                  keyboardType: TextInputType.number,
-                  decoration: InputDecoration(labelText: lang.t('Area (acres)')),
-                ),
-                const SizedBox(height: 12),
-                DropdownButtonFormField<String>(
-                  initialValue: growthStage,
-                  decoration: InputDecoration(labelText: lang.t('Growth Stage')),
-                  items:
-                      [
-                            'Seedling',
-                            'Vegetative',
-                            'Flowering',
-                            'Fruiting',
-                            'Harvest Ready',
-                          ]
-                          .map(
-                            (s) => DropdownMenuItem(value: s, child: Text(lang.t(s))),
-                          )
-                          .toList(),
-                  onChanged: (v) => setDialogState(() => growthStage = v!),
-                ),
-                const SizedBox(height: 12),
-                DropdownButtonFormField<String>(
-                  initialValue: status,
-                  decoration: InputDecoration(labelText: lang.t('Status')),
-                  items: ['Active', 'Harvested', 'Inactive']
-                      .map((s) => DropdownMenuItem(value: s, child: Text(lang.t(s))))
-                      .toList(),
-                  onChanged: (v) => setDialogState(() => status = v!),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: notesCtrl,
-                  decoration: InputDecoration(
-                    labelText: lang.t('Remarks / Notes'),
-                  ),
-                  maxLines: 2,
-                ),
-              ],
-            ),
+          title: Text(lang.t('Delete Crop')),
+          content: Text(
+            '${lang.t("Are you sure you want to delete")} "${crop.name}"?\\n\\n${lang.t("This action cannot be undone.")}',
           ),
           actions: [
             TextButton(
-              onPressed: () => Navigator.pop(ctx),
+              onPressed: isDeleting ? null : () => Navigator.pop(ctx),
               child: Text(lang.t('Cancel')),
             ),
             FilledButton(
-              onPressed: () {
-                crop.name = nameCtrl.text.trim();
-                crop.area = double.tryParse(areaCtrl.text);
-                crop.growthStage = growthStage;
-                crop.status = status;
-                crop.notes = notesCtrl.text.trim().isNotEmpty
-                    ? notesCtrl.text.trim()
-                    : null;
-                farm.updateCrop(crop);
-                Navigator.pop(ctx);
-              },
-              child: Text(lang.t('Update')),
+              style: FilledButton.styleFrom(backgroundColor: Colors.red),
+              onPressed: isDeleting
+                  ? null
+                  : () async {
+                      setDialogState(() => isDeleting = true);
+                      final success = await farm.deleteCrop(crop.id, userId);
+                      if (ctx.mounted) {
+                        Navigator.pop(ctx);
+                        if (success) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                '${lang.t(crop.name)} ${lang.t('deleted successfully')}.',
+                              ),
+                            ),
+                          );
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                lang.t(
+                                  'Crop was not deleted. Please try again.',
+                                ),
+                              ),
+                            ),
+                          );
+                        }
+                      }
+                    },
+              child: isDeleting
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        color: Colors.white,
+                        strokeWidth: 2,
+                      ),
+                    )
+                  : Text(lang.t('Delete')),
             ),
           ],
         ),

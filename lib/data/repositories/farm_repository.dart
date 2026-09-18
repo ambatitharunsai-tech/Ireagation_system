@@ -7,12 +7,18 @@ class FarmRepository {
   final SupabaseClient _supabase = Supabase.instance.client;
 
   Future<List<Crop>> getCropsByUser(String userId) async {
-    final data = await _supabase
-        .from('crops')
-        .select()
-        .eq('user_id', userId)
-        .order('created_at', ascending: false);
-    return data.map((json) => Crop.fromMap(json)).toList();
+    try {
+      final data = await _supabase
+          .from('crops')
+          .select()
+          .eq('user_id', userId)
+          .order('created_at', ascending: false);
+      return data.map((json) => Crop.fromMap(json)).toList();
+    } catch (e) {
+      // Fallback if created_at doesn't exist yet
+      final data = await _supabase.from('crops').select().eq('user_id', userId);
+      return data.map((json) => Crop.fromMap(json)).toList();
+    }
   }
 
   Future<Crop> insertCrop(Crop crop) async {
@@ -33,12 +39,17 @@ class FarmRepository {
   }
 
   Future<List<FarmTask>> getTasksByUser(String userId) async {
-    final data = await _supabase
-        .from('tasks')
-        .select()
-        .eq('user_id', userId)
-        .order('created_at', ascending: false);
-    return data.map((json) => FarmTask.fromMap(json)).toList();
+    try {
+      final data = await _supabase
+          .from('tasks')
+          .select()
+          .eq('user_id', userId)
+          .order('created_at', ascending: false);
+      return data.map((json) => FarmTask.fromMap(json)).toList();
+    } catch (e) {
+      final data = await _supabase.from('tasks').select().eq('user_id', userId);
+      return data.map((json) => FarmTask.fromMap(json)).toList();
+    }
   }
 
   Future<FarmTask> insertTask(FarmTask task) async {
