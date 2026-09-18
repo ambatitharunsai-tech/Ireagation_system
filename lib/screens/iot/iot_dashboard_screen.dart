@@ -132,7 +132,7 @@ class _IotDashboardScreenState extends State<IotDashboardScreen>
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton.extended(
+      floatingActionButton: FloatingActionButton.extended( heroTag: "iot_fab",
         onPressed: () {
           // Placeholder for pairing device
         },

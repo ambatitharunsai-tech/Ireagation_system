@@ -74,7 +74,7 @@ class TaskScreen extends StatelessWidget {
                 ],
               ],
             ),
-      floatingActionButton: FloatingActionButton.extended(
+      floatingActionButton: FloatingActionButton.extended( heroTag: "tasks_fab",
         onPressed: () => AddTaskDialog.show(context),
         icon: const Icon(Icons.add),
         label: Text(lang.t('Add Task')),

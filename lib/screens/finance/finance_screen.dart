@@ -71,7 +71,7 @@ class FinanceScreen extends StatelessWidget {
             ),
           ],
         ),
-        floatingActionButton: FloatingActionButton.extended(
+        floatingActionButton: FloatingActionButton.extended( heroTag: "finance_fab",
           onPressed: () => _showAddDialog(context),
           icon: const Icon(Icons.add),
           label: Text(lang.t('Add Entry')),
