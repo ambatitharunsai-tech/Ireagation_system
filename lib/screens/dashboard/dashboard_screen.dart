@@ -18,7 +18,6 @@ class DashboardScreen extends StatefulWidget {
 
   @override
   State<DashboardScreen> createState() => _DashboardScreenState();
-
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
@@ -38,7 +37,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final iot = Provider.of<IoTProvider>(context);
     final weatherProv = Provider.of<WeatherProvider>(context);
     final lang = Provider.of<LanguageProvider>(context);
-    
+
     final userName = auth.currentUser?.name ?? lang.t('Farmer');
 
     return Scaffold(
@@ -60,10 +59,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             if (weatherProv.lastLocation != null)
               Text(
                 '📍 ${weatherProv.lastLocation!.locationName}',
-                style: TextStyle(
-                  color: Colors.grey.shade600,
-                  fontSize: 12,
-                ),
+                style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
               ),
           ],
         ),
@@ -141,12 +137,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildWeatherCard(WeatherProvider wp, LanguageProvider lang, BuildContext context) {
+  Widget _buildWeatherCard(
+    WeatherProvider wp,
+    LanguageProvider lang,
+    BuildContext context,
+  ) {
     final weather = wp.currentWeather;
 
     return GestureDetector(
       onTap: () {
-        Navigator.push(context, MaterialPageRoute(builder: (_) => const WeatherDetailsScreen()));
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const WeatherDetailsScreen()),
+        );
       },
       child: Container(
         decoration: BoxDecoration(
@@ -166,75 +169,93 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ),
         padding: const EdgeInsets.all(20),
         child: wp.isLoading
-            ? const Center(child: CircularProgressIndicator(color: Colors.white))
+            ? const Center(
+                child: CircularProgressIndicator(color: Colors.white),
+              )
             : weather == null
-                ? Center(
-                    child: Column(
-                      children: [
-                        const Icon(Icons.cloud_off, color: Colors.white, size: 40),
-                        const SizedBox(height: 8),
-                        Text(
-                          lang.t(wp.error ?? 'Weather unavailable\nSet farm location or enable GPS'),
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(color: Colors.white),
-                        ),
-                      ],
+            ? Center(
+                child: Column(
+                  children: [
+                    const Icon(Icons.cloud_off, color: Colors.white, size: 40),
+                    const SizedBox(height: 8),
+                    Text(
+                      lang.t(
+                        wp.error ?? 'Weather unavailable\nSet farm location or enable GPS',
+                      ),
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(color: Colors.white),
                     ),
-                  )
-                : Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  ],
+                ),
+              )
+            : Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                weather.temperature != null ? '${weather.temperature}°C' : lang.t('No data'),
-                                style: const TextStyle(
-                                  fontSize: 48,
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w300,
-                                ),
-                              ),
-                              Text(
-                                lang.t(weather.condition),
-                                style: const TextStyle(
-                                  fontSize: 18,
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const Icon(Icons.wb_sunny, color: Colors.amber, size: 64),
-                        ],
-                      ),
-                      const SizedBox(height: 20),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          _buildWeatherDetail(Icons.water_drop, '${weather.humidity ?? "--"}%', lang.t('Humidity')),
-                          _buildWeatherDetail(Icons.air, '${weather.windSpeed ?? "--"} km/h', lang.t('Wind')),
-                          _buildWeatherDetail(Icons.beach_access, '${weather.precipitationProbability ?? "--"}%', lang.t('Rain')),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            '${weather.isCached ? lang.t("CACHED") : lang.t("LIVE")} • ${lang.t("Updated")} ${DateFormat.jm().format(weather.timestamp)}',
-                            style: TextStyle(
-                              color: Colors.white.withValues(alpha: 0.7),
-                              fontSize: 11,
+                            weather.temperature != null
+                                ? '${weather.temperature}°C'
+                                : lang.t('No data'),
+                            style: const TextStyle(
+                              fontSize: 48,
+                              color: Colors.white,
+                              fontWeight: FontWeight.w300,
+                            ),
+                          ),
+                          Text(
+                            lang.t(weather.condition),
+                            style: const TextStyle(
+                              fontSize: 18,
+                              color: Colors.white,
+                              fontWeight: FontWeight.w500,
                             ),
                           ),
                         ],
                       ),
+                      const Icon(Icons.wb_sunny, color: Colors.amber, size: 64),
                     ],
                   ),
+                  const SizedBox(height: 20),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      _buildWeatherDetail(
+                        Icons.water_drop,
+                        '${weather.humidity ?? "--"}%',
+                        lang.t('Humidity'),
+                      ),
+                      _buildWeatherDetail(
+                        Icons.air,
+                        '${weather.windSpeed ?? "--"} km/h',
+                        lang.t('Wind'),
+                      ),
+                      _buildWeatherDetail(
+                        Icons.beach_access,
+                        '${weather.precipitationProbability ?? "--"}%',
+                        lang.t('Rain'),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      Text(
+                        '${weather.isCached ? lang.t("CACHED") : lang.t("LIVE")} • ${lang.t("Updated")} ${DateFormat.jm().format(weather.timestamp)}',
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.7),
+                          fontSize: 11,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
       ),
     );
   }
@@ -247,15 +268,32 @@ class _DashboardScreenState extends State<DashboardScreen> {
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(value, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
-            Text(label, style: TextStyle(color: Colors.white.withValues(alpha: 0.8), fontSize: 11)),
+            Text(
+              value,
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 13,
+              ),
+            ),
+            Text(
+              label,
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.8),
+                fontSize: 11,
+              ),
+            ),
           ],
         ),
       ],
     );
   }
 
-  Widget _buildFarmHealth(IoTProvider iot, WeatherProvider wp, LanguageProvider lang) {
+  Widget _buildFarmHealth(
+    IoTProvider iot,
+    WeatherProvider wp,
+    LanguageProvider lang,
+  ) {
     String status = 'UNKNOWN';
     Color color = Colors.grey;
     String message = 'Insufficient data';
@@ -264,7 +302,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
       bool anyOffline = iot.sensors.any((s) => !s.isOnline);
       bool extremeWeather = false;
       if (wp.currentWeather != null) {
-        if ((wp.currentWeather!.temperature ?? 25) > 40 || (wp.currentWeather!.temperature ?? 25) < 0) {
+        if ((wp.currentWeather!.temperature ?? 25) > 40 ||
+            (wp.currentWeather!.temperature ?? 25) < 0) {
           extremeWeather = true;
         }
       }
@@ -301,11 +340,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
               children: [
                 Text(
                   lang.t('Farm Health'),
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
                 ),
                 Text(
                   lang.t(status),
-                  style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 18),
+                  style: TextStyle(
+                    color: color,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                  ),
                 ),
                 Text(
                   lang.t(message),
@@ -322,11 +368,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget _buildIrrigationOverview(IoTProvider iot, LanguageProvider lang) {
     final actuators = iot.actuators;
     final pump = actuators.isNotEmpty ? actuators.first : null;
-    
-    final moistureSensors = iot.sensors.where((s) => s.deviceType == 'moisture_sensor');
+
+    final moistureSensors = iot.sensors.where(
+      (s) => s.deviceType == 'moisture_sensor',
+    );
     String moisture = lang.t('No data');
-    if (moistureSensors.isNotEmpty && moistureSensors.first.latestTelemetry?.soilMoisture != null) {
-      moisture = '${moistureSensors.first.latestTelemetry?.soilMoisture!.toStringAsFixed(1)}%';
+    if (moistureSensors.isNotEmpty &&
+        moistureSensors.first.latestTelemetry?.soilMoisture != null) {
+      moisture =
+          '${moistureSensors.first.latestTelemetry?.soilMoisture!.toStringAsFixed(1)}%';
     }
 
     return Column(
@@ -346,28 +396,57 @@ class _DashboardScreenState extends State<DashboardScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(lang.t('Mode:'), style: TextStyle(color: Colors.grey.shade600)),
-                  Text(iot.autoIrrigation ? lang.t('Auto') : lang.t('Manual'), style: const TextStyle(fontWeight: FontWeight.bold)),
-                ],
-              ),
-              const Divider(),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(lang.t('Soil Moisture:'), style: TextStyle(color: Colors.grey.shade600)),
-                  Text(moisture, style: const TextStyle(fontWeight: FontWeight.bold)),
-                ],
-              ),
-              const Divider(),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(lang.t('Pump State:'), style: TextStyle(color: Colors.grey.shade600)),
                   Text(
-                    pump == null ? lang.t('UNKNOWN') : (!pump.isOnline ? lang.t('OFFLINE') : ((pump.currentPumpState == 'ON' || pump.currentValveState == 'ON') ? lang.t('ON') : lang.t('OFF'))),
+                    lang.t('Mode:'),
+                    style: TextStyle(color: Colors.grey.shade600),
+                  ),
+                  Text(
+                    iot.autoIrrigation ? lang.t('Auto') : lang.t('Manual'),
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
+              const Divider(),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    lang.t('Soil Moisture:'),
+                    style: TextStyle(color: Colors.grey.shade600),
+                  ),
+                  Text(
+                    moisture,
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
+              const Divider(),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    lang.t('Pump State:'),
+                    style: TextStyle(color: Colors.grey.shade600),
+                  ),
+                  Text(
+                    pump == null
+                        ? lang.t('UNKNOWN')
+                        : (!pump.isOnline
+                              ? lang.t('OFFLINE')
+                              : ((pump.currentPumpState == 'ON' ||
+                                        pump.currentValveState == 'ON')
+                                    ? lang.t('ON')
+                                    : lang.t('OFF'))),
                     style: TextStyle(
-                      fontWeight: FontWeight.bold, 
-                      color: pump == null ? Colors.grey : (!pump.isOnline ? Colors.orange : ((pump.currentPumpState == 'ON' || pump.currentValveState == 'ON') ? Colors.green : Colors.red)),
+                      fontWeight: FontWeight.bold,
+                      color: pump == null
+                          ? Colors.grey
+                          : (!pump.isOnline
+                                ? Colors.orange
+                                : ((pump.currentPumpState == 'ON' ||
+                                          pump.currentValveState == 'ON')
+                                      ? Colors.green
+                                      : Colors.red)),
                     ),
                   ),
                 ],
@@ -395,8 +474,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _buildWaterStat(lang.t('Tank Level'), lang.t('No data'), Icons.opacity),
-              _buildWaterStat(lang.t("Today's Usage"), lang.t('No data'), Icons.water),
+              _buildWaterStat(
+                lang.t('Tank Level'),
+                lang.t('No data'),
+                Icons.opacity,
+              ),
+              _buildWaterStat(
+                lang.t("Today's Usage"),
+                lang.t('No data'),
+                Icons.water,
+              ),
             ],
           ),
         ),
@@ -409,8 +496,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
       children: [
         Icon(icon, color: Colors.blue.shade700, size: 28),
         const SizedBox(height: 8),
-        Text(value, style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue.shade900, fontSize: 16)),
-        Text(label, style: TextStyle(color: Colors.blue.shade700, fontSize: 12)),
+        Text(
+          value,
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Colors.blue.shade900,
+            fontSize: 16,
+          ),
+        ),
+        Text(
+          label,
+          style: TextStyle(color: Colors.blue.shade700, fontSize: 12),
+        ),
       ],
     );
   }
@@ -424,7 +521,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
         _buildSectionTitle(lang.t('Alerts')),
         const SizedBox(height: 12),
         ...iot.alerts.take(3).map((alert) {
-          final color = alert.severity == 'CRITICAL' ? Colors.red : Colors.orange;
+          final color = alert.severity == 'CRITICAL'
+              ? Colors.red
+              : Colors.orange;
           return Container(
             margin: const EdgeInsets.only(bottom: 8),
             decoration: BoxDecoration(
@@ -434,8 +533,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
             child: ListTile(
               leading: Icon(Icons.warning_amber_rounded, color: color),
-              title: Text(lang.t(alert.message), style: TextStyle(fontWeight: FontWeight.bold, color: color.shade700)),
-              subtitle: Text(DateFormat.jm().format(alert.createdAt), style: TextStyle(fontSize: 12, color: color.shade600)),
+              title: Text(
+                lang.t(alert.message),
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: color.shade700,
+                ),
+              ),
+              subtitle: Text(
+                DateFormat.jm().format(alert.createdAt),
+                style: TextStyle(fontSize: 12, color: color.shade600),
+              ),
             ),
           );
         }),
@@ -443,8 +551,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-
-Widget _buildErrorBanner(String message, VoidCallback onDismiss) {
+  Widget _buildErrorBanner(String message, VoidCallback onDismiss) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -478,41 +585,51 @@ Widget _buildErrorBanner(String message, VoidCallback onDismiss) {
       ),
     );
   }
-Widget _buildQuickActions(ThemeData theme) {
+
+  Widget _buildQuickActions(ThemeData theme) {
     final lang = Provider.of<LanguageProvider>(context);
     return Row(
       children: [
-        _buildActionChip(
-          lang.t('Add Crop'),
-          Icons.add_circle_outline,
-          Colors.green,
-          onTap: () => AddCropDialog.show(context),
+        Expanded(
+          child: _buildActionChip(
+            lang.t('Add Crop'),
+            Icons.add_circle_outline,
+            Colors.green,
+            onTap: () => AddCropDialog.show(context),
+          ),
         ),
         const SizedBox(width: 8),
-        _buildActionChip(
-          lang.t('Add Task'),
-          Icons.playlist_add,
-          Colors.orange,
-          onTap: () => AddTaskDialog.show(context),
+        Expanded(
+          child: _buildActionChip(
+            lang.t('Add Task'),
+            Icons.playlist_add,
+            Colors.orange,
+            onTap: () => AddTaskDialog.show(context),
+          ),
         ),
         const SizedBox(width: 8),
-        _buildActionChip(
-          lang.t('Add Expense'),
-          Icons.money_off,
-          Colors.red,
-          onTap: () => AddFinanceDialog.show(context),
+        Expanded(
+          child: _buildActionChip(
+            lang.t('Add Expense'),
+            Icons.money_off,
+            Colors.red,
+            onTap: () => AddFinanceDialog.show(context),
+          ),
         ),
         const SizedBox(width: 8),
-        _buildActionChip(
-          lang.t('Add Sale'),
-          Icons.sell,
-          Colors.blue,
-          onTap: () => AddFinanceDialog.show(context),
+        Expanded(
+          child: _buildActionChip(
+            lang.t('Add Sale'),
+            Icons.sell,
+            Colors.blue,
+            onTap: () => AddFinanceDialog.show(context),
+          ),
         ),
       ],
     );
   }
-Widget _buildCropsList(FarmProvider farm) {
+
+  Widget _buildCropsList(FarmProvider farm) {
     final lang = Provider.of<LanguageProvider>(context);
     if (farm.crops.isEmpty) {
       return Container(
@@ -627,7 +744,8 @@ Widget _buildCropsList(FarmProvider farm) {
       }).toList(),
     );
   }
-Widget _buildTasksList(FarmProvider farm) {
+
+  Widget _buildTasksList(FarmProvider farm) {
     final lang = Provider.of<LanguageProvider>(context);
     final pending = farm.tasks
         .where((t) => t.status == 'Pending')
@@ -745,19 +863,24 @@ Widget _buildTasksList(FarmProvider farm) {
             borderRadius: BorderRadius.circular(16),
             border: Border.all(color: color.withValues(alpha: 0.2)),
           ),
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(icon, color: color, size: 28),
               const SizedBox(height: 8),
-              Text(
-                label,
-                style: TextStyle(
-                  color: color.withValues(alpha: 0.9),
-                  fontWeight: FontWeight.bold,
-                  fontSize: 13,
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  label,
+                  style: TextStyle(
+                    color: color.withValues(alpha: 0.9),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13,
+                  ),
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
                 ),
-                textAlign: TextAlign.center,
               ),
             ],
           ),
