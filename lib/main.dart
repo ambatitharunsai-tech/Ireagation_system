@@ -1,3 +1,5 @@
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -12,6 +14,11 @@ import 'screens/dashboard/main_layout.dart';
 import 'screens/auth/login_screen.dart';
 
 void main() async {
+  try {
+    await dotenv.load(fileName: ".env");
+  } catch (e) {
+    debugPrint("No .env file found. Falling back to dart-defines.");
+  }
   WidgetsFlutterBinding.ensureInitialized();
 
   await Supabase.initialize(
