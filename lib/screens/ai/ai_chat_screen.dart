@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/language_provider.dart';
+import '../../providers/weather_provider.dart';
 
 import '../../providers/farm_provider.dart';
 import '../../providers/finance_provider.dart';
 import '../../providers/iot_provider.dart';
-import '../../services/weather_service.dart';
+
 import '../../config/api_keys.dart';
 
 class AiChatScreen extends StatefulWidget {
@@ -20,12 +21,11 @@ class _AiChatScreenState extends State<AiChatScreen> {
   final ScrollController _scrollCtrl = ScrollController();
   final List<_ChatMessage> _messages = [];
   bool _isLoading = false;
-  WeatherData? _weather;
+  
 
   @override
   void initState() {
     super.initState();
-    _fetchWeather();
     _messages.add(
       _ChatMessage(
         text:
@@ -41,9 +41,7 @@ class _AiChatScreenState extends State<AiChatScreen> {
     );
   }
 
-  Future<void> _fetchWeather() async {
-    _weather = await WeatherService().fetchWeather();
-  }
+  
 
   Future<void> _sendMessage([String? override]) async {
     final query = override ?? _msgCtrl.text.trim();
@@ -66,7 +64,7 @@ class _AiChatScreenState extends State<AiChatScreen> {
       tasks: farm.tasks,
       expenses: finance.expenses,
       sales: finance.sales,
-      weather: _weather,
+      weather: Provider.of<WeatherProvider>(context, listen: false).currentWeather,
     );
 
     if (mounted) {
@@ -95,7 +93,7 @@ class _AiChatScreenState extends State<AiChatScreen> {
       tasks: farm.tasks,
       expenses: finance.expenses,
       sales: finance.sales,
-      weather: _weather,
+      weather: Provider.of<WeatherProvider>(context, listen: false).currentWeather,
     );
 
     if (mounted) {

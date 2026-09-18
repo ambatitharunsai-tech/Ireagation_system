@@ -1,237 +1,450 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../providers/language_provider.dart';
-import 'package:geolocator/geolocator.dart';
+import 'package:intl/intl.dart';
 
+import '../../providers/auth_provider.dart';
 import '../../providers/farm_provider.dart';
 import '../../providers/finance_provider.dart';
-import '../../providers/auth_provider.dart';
 import '../../providers/iot_provider.dart';
-import '../../services/weather_service.dart';
+import '../../providers/language_provider.dart';
+import '../../providers/weather_provider.dart';
 import '../../widgets/add_crop_dialog.dart';
 import '../../widgets/add_task_dialog.dart';
 import '../../widgets/add_finance_dialog.dart';
+import 'weather_details_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
 
   @override
   State<DashboardScreen> createState() => _DashboardScreenState();
+
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
-  final WeatherService _weatherService = WeatherService();
-  WeatherData? _weather;
-  bool _loadingWeather = true;
-  String _locationName = "Detecting...";
-
   @override
   void initState() {
     super.initState();
-    _fetchWeather();
-  }
-
-  Future<void> _fetchWeather() async {
-    setState(() => _loadingWeather = true);
-
-    double lat = 12.97;
-    double lon = 77.59;
-    String locName = "Bangalore, India";
-
-    try {
-      LocationPermission permission = await Geolocator.checkPermission();
-      if (permission == LocationPermission.denied) {
-        permission = await Geolocator.requestPermission();
-      }
-
-      if (permission == LocationPermission.whileInUse ||
-          permission == LocationPermission.always) {
-        final position = await Geolocator.getCurrentPosition(
-          locationSettings: const LocationSettings(
-            accuracy: LocationAccuracy.low,
-            timeLimit: Duration(seconds: 3),
-          ),
-        );
-        lat = position.latitude;
-        lon = position.longitude;
-        locName = "Current Location";
-      }
-    } catch (e) {
-      debugPrint('Location error: $e');
-    }
-
-    final weather = await _weatherService.fetchWeather(lat: lat, lon: lon);
-    if (mounted) {
-      setState(() {
-        _weather = weather;
-        _locationName = locName;
-        _loadingWeather = false;
-      });
-    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<WeatherProvider>(context, listen: false).fetchWeather();
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    final lang = Provider.of<LanguageProvider>(context);
-    final user = Provider.of<AuthProvider>(context).currentUser;
+    final auth = Provider.of<AuthProvider>(context);
     final farm = Provider.of<FarmProvider>(context);
     final finance = Provider.of<FinanceProvider>(context);
     final iot = Provider.of<IoTProvider>(context);
-    final theme = Theme.of(context);
+    final weatherProv = Provider.of<WeatherProvider>(context);
+    final lang = Provider.of<LanguageProvider>(context);
+    
+    final userName = auth.currentUser?.name ?? lang.t('Farmer');
 
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: Colors.white,
         elevation: 0,
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              '${lang.t('Hello')}, ${user?.name ?? lang.t('Farmer')} 👋',
-              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800),
+              '${lang.t("Hello")}, $userName 👋',
+              style: const TextStyle(
+                color: Colors.black87,
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
             ),
-            if (user?.farmName != null)
+            if (weatherProv.lastLocation != null)
               Text(
-                user!.farmName!,
+                '📍 ${weatherProv.lastLocation!.locationName}',
                 style: TextStyle(
-                  fontSize: 13,
                   color: Colors.grey.shade600,
-                  fontWeight: FontWeight.w500,
+                  fontSize: 12,
                 ),
               ),
           ],
         ),
-        toolbarHeight: 64,
         actions: [
           IconButton(
-            icon: Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Colors.grey.shade100,
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(Icons.refresh, size: 20, color: Colors.black87),
-            ),
+            icon: const Icon(Icons.refresh, color: Colors.black87),
             onPressed: () {
-              final userId = user?.id;
-              if (userId != null) {
-                farm.loadData(userId);
-                finance.loadData(userId);
-                _fetchWeather();
-              }
+              farm.loadData(auth.currentUser!.id);
+              finance.loadData(auth.currentUser!.id);
+              weatherProv.fetchWeather();
             },
           ),
           const SizedBox(width: 8),
         ],
       ),
-      body: farm.isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : RefreshIndicator(
-              onRefresh: () async {
-                if (user != null) {
-                  await Future.wait([
-                    farm.loadData(user.id),
-                    finance.loadData(user.id),
-                  ]);
-                  _fetchWeather();
-                }
-              },
-              child: ListView(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 8,
-                ),
-                children: [
-                  if (farm.error != null)
-                    _buildErrorBanner(farm.error!, () => farm.clearError()),
-                  if (finance.error != null)
-                    _buildErrorBanner(
-                      finance.error!,
-                      () => finance.clearError(),
-                    ),
+      body: RefreshIndicator(
+        onRefresh: () async {
+          if (auth.currentUser != null) {
+            await Future.wait([
+              farm.loadData(auth.currentUser!.id),
+              finance.loadData(auth.currentUser!.id),
+              weatherProv.fetchWeather(),
+            ]);
+          }
+        },
+        child: ListView(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          children: [
+            if (farm.error != null)
+              _buildErrorBanner(farm.error!, () => farm.clearError()),
 
-                  _buildWeatherCard(theme),
-                  const SizedBox(height: 24),
+            _buildWeatherCard(weatherProv, lang, context),
+            const SizedBox(height: 24),
 
-                  _buildStatsGrid(farm, finance, theme),
-                  const SizedBox(height: 24),
+            _buildFarmHealth(iot, weatherProv, lang),
+            const SizedBox(height: 24),
 
-                  Text(
-                    lang.t('Quick Actions'),
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: -0.5,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  _buildQuickActions(theme),
-                  const SizedBox(height: 24),
+            _buildIrrigationOverview(iot, lang),
+            const SizedBox(height: 24),
 
-                  Text(
-                    lang.t('IoT Sensors'),
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: -0.5,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  _buildIoTSummary(iot),
-                  const SizedBox(height: 24),
+            _buildWaterManagement(iot, lang),
+            const SizedBox(height: 24),
 
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        lang.t('Recent Crops'),
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: -0.5,
-                        ),
-                      ),
-                      Text(
-                        '${farm.crops.length} ${lang.t('total')}',
-                        style: TextStyle(
-                          color: Colors.grey.shade600,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 13,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  _buildCropsList(farm),
-                  const SizedBox(height: 24),
+            _buildAlerts(iot, lang),
+            const SizedBox(height: 24),
 
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        lang.t('Pending Tasks'),
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: -0.5,
-                        ),
-                      ),
-                      Text(
-                        '${farm.pendingTaskCount} ${lang.t('pending')}',
-                        style: TextStyle(
-                          color: Colors.grey.shade600,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 13,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  _buildTasksList(farm),
-                  const SizedBox(height: 24),
-                ],
-              ),
-            ),
+            _buildSectionTitle(lang.t('Quick Actions')),
+            const SizedBox(height: 12),
+            _buildQuickActions(Theme.of(context)),
+            const SizedBox(height: 24),
+
+            _buildSectionTitle(lang.t('Crops Overview')),
+            const SizedBox(height: 12),
+            _buildCropsList(farm),
+            const SizedBox(height: 24),
+
+            _buildSectionTitle(lang.t('Pending Tasks')),
+            const SizedBox(height: 12),
+            _buildTasksList(farm),
+            const SizedBox(height: 40),
+          ],
+        ),
+      ),
     );
   }
 
-  Widget _buildErrorBanner(String message, VoidCallback onDismiss) {
+  Widget _buildSectionTitle(String title) {
+    return Text(
+      title,
+      style: const TextStyle(
+        fontSize: 18,
+        fontWeight: FontWeight.bold,
+        color: Colors.black87,
+      ),
+    );
+  }
+
+  Widget _buildWeatherCard(WeatherProvider wp, LanguageProvider lang, BuildContext context) {
+    final weather = wp.currentWeather;
+
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(context, MaterialPageRoute(builder: (_) => const WeatherDetailsScreen()));
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Colors.blue.shade400, Colors.blue.shade800],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(24),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.blue.withValues(alpha: 0.3),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        padding: const EdgeInsets.all(20),
+        child: wp.isLoading
+            ? const Center(child: CircularProgressIndicator(color: Colors.white))
+            : weather == null
+                ? Center(
+                    child: Column(
+                      children: [
+                        const Icon(Icons.cloud_off, color: Colors.white, size: 40),
+                        const SizedBox(height: 8),
+                        Text(
+                          lang.t(wp.error ?? 'Weather unavailable\nSet farm location or enable GPS'),
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(color: Colors.white),
+                        ),
+                      ],
+                    ),
+                  )
+                : Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                weather.temperature != null ? '${weather.temperature}°C' : lang.t('No data'),
+                                style: const TextStyle(
+                                  fontSize: 48,
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w300,
+                                ),
+                              ),
+                              Text(
+                                lang.t(weather.condition),
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const Icon(Icons.wb_sunny, color: Colors.amber, size: 64),
+                        ],
+                      ),
+                      const SizedBox(height: 20),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          _buildWeatherDetail(Icons.water_drop, '${weather.humidity ?? "--"}%', lang.t('Humidity')),
+                          _buildWeatherDetail(Icons.air, '${weather.windSpeed ?? "--"} km/h', lang.t('Wind')),
+                          _buildWeatherDetail(Icons.beach_access, '${weather.precipitationProbability ?? "--"}%', lang.t('Rain')),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          Text(
+                            '${weather.isCached ? lang.t("CACHED") : lang.t("LIVE")} • ${lang.t("Updated")} ${DateFormat.jm().format(weather.timestamp)}',
+                            style: TextStyle(
+                              color: Colors.white.withValues(alpha: 0.7),
+                              fontSize: 11,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+      ),
+    );
+  }
+
+  Widget _buildWeatherDetail(IconData icon, String value, String label) {
+    return Row(
+      children: [
+        Icon(icon, color: Colors.white.withValues(alpha: 0.8), size: 16),
+        const SizedBox(width: 4),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(value, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+            Text(label, style: TextStyle(color: Colors.white.withValues(alpha: 0.8), fontSize: 11)),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildFarmHealth(IoTProvider iot, WeatherProvider wp, LanguageProvider lang) {
+    String status = 'UNKNOWN';
+    Color color = Colors.grey;
+    String message = 'Insufficient data';
+
+    if (iot.sensors.isNotEmpty) {
+      bool anyOffline = iot.sensors.any((s) => !s.isOnline);
+      bool extremeWeather = false;
+      if (wp.currentWeather != null) {
+        if ((wp.currentWeather!.temperature ?? 25) > 40 || (wp.currentWeather!.temperature ?? 25) < 0) {
+          extremeWeather = true;
+        }
+      }
+
+      if (anyOffline) {
+        status = 'ATTENTION REQUIRED';
+        color = Colors.orange;
+        message = 'Some sensors are offline';
+      } else if (extremeWeather) {
+        status = 'CRITICAL';
+        color = Colors.red;
+        message = 'Extreme weather conditions detected';
+      } else {
+        status = 'GOOD';
+        color = Colors.green;
+        message = 'All systems nominal';
+      }
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.favorite, color: color, size: 32),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  lang.t('Farm Health'),
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                ),
+                Text(
+                  lang.t(status),
+                  style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 18),
+                ),
+                Text(
+                  lang.t(message),
+                  style: TextStyle(color: Colors.grey.shade700, fontSize: 12),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildIrrigationOverview(IoTProvider iot, LanguageProvider lang) {
+    final actuators = iot.actuators;
+    final pump = actuators.isNotEmpty ? actuators.first : null;
+    
+    final moistureSensors = iot.sensors.where((s) => s.type == 'moisture_sensor');
+    String moisture = lang.t('No data');
+    if (moistureSensors.isNotEmpty && moistureSensors.first.lastReading != null) {
+      moisture = '${moistureSensors.first.lastReading!.toStringAsFixed(1)}%';
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildSectionTitle(lang.t('Irrigation Overview')),
+        const SizedBox(height: 12),
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.grey.shade200),
+          ),
+          child: Column(
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(lang.t('Mode:'), style: TextStyle(color: Colors.grey.shade600)),
+                  Text(iot.autoIrrigation ? lang.t('Auto') : lang.t('Manual'), style: const TextStyle(fontWeight: FontWeight.bold)),
+                ],
+              ),
+              const Divider(),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(lang.t('Soil Moisture:'), style: TextStyle(color: Colors.grey.shade600)),
+                  Text(moisture, style: const TextStyle(fontWeight: FontWeight.bold)),
+                ],
+              ),
+              const Divider(),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(lang.t('Pump State:'), style: TextStyle(color: Colors.grey.shade600)),
+                  Text(
+                    pump == null ? lang.t('UNKNOWN') : (!pump.isOnline ? lang.t('OFFLINE') : (pump.isActive ? lang.t('ON') : lang.t('OFF'))),
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold, 
+                      color: pump == null ? Colors.grey : (!pump.isOnline ? Colors.orange : (pump.isActive ? Colors.green : Colors.red)),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildWaterManagement(IoTProvider iot, LanguageProvider lang) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildSectionTitle(lang.t('Water Management')),
+        const SizedBox(height: 12),
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.blue.shade50,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.blue.shade100),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _buildWaterStat(lang.t('Tank Level'), lang.t('No data'), Icons.opacity),
+              _buildWaterStat(lang.t("Today's Usage"), lang.t('No data'), Icons.water),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildWaterStat(String label, String value, IconData icon) {
+    return Column(
+      children: [
+        Icon(icon, color: Colors.blue.shade700, size: 28),
+        const SizedBox(height: 8),
+        Text(value, style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue.shade900, fontSize: 16)),
+        Text(label, style: TextStyle(color: Colors.blue.shade700, fontSize: 12)),
+      ],
+    );
+  }
+
+  Widget _buildAlerts(IoTProvider iot, LanguageProvider lang) {
+    if (iot.alerts.isEmpty) return const SizedBox.shrink();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildSectionTitle(lang.t('Alerts')),
+        const SizedBox(height: 12),
+        ...iot.alerts.take(3).map((alert) {
+          final color = alert.severity == 'CRITICAL' ? Colors.red : Colors.orange;
+          return Container(
+            margin: const EdgeInsets.only(bottom: 8),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: color.withValues(alpha: 0.3)),
+            ),
+            child: ListTile(
+              leading: Icon(Icons.warning_amber_rounded, color: color),
+              title: Text(lang.t(alert.message), style: TextStyle(fontWeight: FontWeight.bold, color: color.shade700)),
+              subtitle: Text(DateFormat.jm().format(alert.timestamp), style: TextStyle(fontSize: 12, color: color.shade600)),
+            ),
+          );
+        }),
+      ],
+    );
+  }
+
+
+Widget _buildErrorBanner(String message, VoidCallback onDismiss) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -265,369 +478,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ),
     );
   }
-
-  Widget _buildWeatherCard(ThemeData theme) {
-    final lang = Provider.of<LanguageProvider>(context);
-    if (_loadingWeather) {
-      return Container(
-        height: 180,
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Colors.blue.shade200, Colors.blue.shade100],
-          ),
-          borderRadius: BorderRadius.circular(28),
-        ),
-        child: const Center(
-          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-        ),
-      );
-    }
-
-    if (_weather == null) {
-      return Container(
-        height: 180,
-        decoration: BoxDecoration(
-          color: Colors.grey.shade100,
-          borderRadius: BorderRadius.circular(28),
-        ),
-        child: Center(
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.cloud_off, size: 32, color: Colors.grey),
-              const SizedBox(width: 12),
-              Text(
-                lang.t('Weather data unavailable'),
-                style: const TextStyle(
-                  color: Colors.grey,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
-    bool isSunny = _weather!.weatherCode <= 2;
-    List<Color> gradientColors = isSunny
-        ? [const Color(0xFF56CCF2), const Color(0xFF2F80ED)]
-        : [const Color(0xFF4B79A1), const Color(0xFF283E51)];
-
-    String locDisplay = _locationName;
-    if (_locationName == "Detecting...") { locDisplay = lang.t('Detecting...'); }
-    else if (_locationName == "Current Location") { locDisplay = lang.t('Current Location'); }
-
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: gradientColors,
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(28),
-        boxShadow: [
-          BoxShadow(
-            color: gradientColors[1].withValues(alpha: 0.4),
-            blurRadius: 16,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      padding: const EdgeInsets.all(24),
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          Positioned(
-            right: -20,
-            top: -20,
-            child: Icon(
-              isSunny ? Icons.wb_sunny : Icons.cloud,
-              size: 140,
-              color: Colors.white.withValues(alpha: 0.15),
-            ),
-          ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(
-                          Icons.location_on,
-                          color: Colors.white,
-                          size: 14,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          locDisplay,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    '${_weather!.temperature.round()}°',
-                    style: const TextStyle(
-                      fontSize: 64,
-                      fontWeight: FontWeight.w800,
-                      color: Colors.white,
-                      height: 1,
-                      letterSpacing: -2,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 8.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          _weather!.condition,
-                          style: const TextStyle(
-                            fontSize: 22,
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        Text(
-                          '${lang.t('Feels like')} ${_weather!.temperature.round() + 1}°',
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: Colors.white.withValues(alpha: 0.8),
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 32),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  _weatherDetailInfo(
-                    Icons.water_drop_outlined,
-                    lang.t('Humidity'),
-                    '${_weather!.humidity.round()}%',
-                  ),
-                  _weatherDetailInfo(
-                    Icons.air,
-                    lang.t('Wind'),
-                    '${_weather!.windSpeed.round()} km/h',
-                  ),
-                  _weatherDetailInfo(
-                    Icons.umbrella_outlined,
-                    lang.t('Rain'),
-                    '${_weather!.precipitationProbability.round()}%',
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _weatherDetailInfo(IconData icon, String label, String value) {
-    return Column(
-      children: [
-        Icon(icon, size: 22, color: Colors.white),
-        const SizedBox(height: 6),
-        Text(
-          value,
-          style: const TextStyle(
-            fontSize: 15,
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 12,
-            color: Colors.white.withValues(alpha: 0.7),
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildStatsGrid(
-    FarmProvider farm,
-    FinanceProvider finance,
-    ThemeData theme,
-  ) {
-    final lang = Provider.of<LanguageProvider>(context);
-    return GridView.count(
-      crossAxisCount: 2,
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      crossAxisSpacing: 16,
-      mainAxisSpacing: 16,
-      childAspectRatio: 1.15,
-      children: [
-        _buildRichStatCard(
-          title: lang.t('Total Crops'),
-          value: '${farm.crops.length}',
-          subtitle: '${farm.activeCropCount} ${lang.t('active')}',
-          icon: Icons.grass,
-          color: Colors.green,
-          progress: farm.crops.isEmpty
-              ? 0
-              : farm.activeCropCount / farm.crops.length,
-        ),
-        _buildRichStatCard(
-          title: lang.t('Active Tasks'),
-          value: '${farm.pendingTaskCount}',
-          subtitle: '${farm.tasks.length} ${lang.t('total tasks')}',
-          icon: Icons.task_alt,
-          color: Colors.orange,
-          progress: farm.tasks.isEmpty
-              ? 0
-              : farm.pendingTaskCount / farm.tasks.length,
-        ),
-        _buildRichStatCard(
-          title: lang.t('Net Profit'),
-          value: '\$${finance.profit.toStringAsFixed(0)}',
-          subtitle: lang.t('Revenue - Expenses'),
-          icon: finance.profit >= 0 ? Icons.trending_up : Icons.trending_down,
-          color: finance.profit >= 0 ? Colors.teal : Colors.red,
-          progress: finance.totalRevenue == 0
-              ? (finance.profit < 0 ? 1 : 0)
-              : (finance.profit / finance.totalRevenue).clamp(0.0, 1.0),
-        ),
-        _buildRichStatCard(
-          title: lang.t('Total Revenue'),
-          value: '\$${finance.totalRevenue.toStringAsFixed(0)}',
-          subtitle: '\$${finance.totalExpenses.toStringAsFixed(0)} ${lang.t('exp')}',
-          icon: Icons.account_balance_wallet,
-          color: Colors.blue,
-          progress: (finance.totalRevenue + finance.totalExpenses) == 0
-              ? 0
-              : finance.totalRevenue /
-                    (finance.totalRevenue + finance.totalExpenses),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildRichStatCard({
-    required String title,
-    required String value,
-    required String subtitle,
-    required IconData icon,
-    required Color color,
-    required double progress,
-  }) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: color.withValues(alpha: 0.1),
-            blurRadius: 16,
-            offset: const Offset(0, 8),
-          ),
-        ],
-        border: Border.all(color: color.withValues(alpha: 0.15)),
-      ),
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(icon, color: color, size: 22),
-              ),
-              Icon(Icons.more_horiz, color: Colors.grey.shade300),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                value,
-                style: const TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: -0.5,
-                ),
-              ),
-              Text(
-                title,
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.grey.shade600,
-                ),
-              ),
-            ],
-          ),
-          const Spacer(),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(6),
-                child: LinearProgressIndicator(
-                  value: progress,
-                  backgroundColor: color.withValues(alpha: 0.1),
-                  valueColor: AlwaysStoppedAnimation<Color>(color),
-                  minHeight: 6,
-                ),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                subtitle,
-                style: TextStyle(
-                  fontSize: 11,
-                  color: Colors.grey.shade500,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildQuickActions(ThemeData theme) {
+Widget _buildQuickActions(ThemeData theme) {
     final lang = Provider.of<LanguageProvider>(context);
     return Row(
       children: [
@@ -661,48 +512,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ],
     );
   }
-
-  Widget _buildActionChip(
-    String label,
-    IconData icon,
-    Color color, {
-    VoidCallback? onTap,
-  }) {
-    return Expanded(
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(16),
-          onTap: onTap ?? () {},
-          child: Container(
-            padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 4),
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: color.withValues(alpha: 0.15)),
-            ),
-            child: Column(
-              children: [
-                Icon(icon, color: color, size: 24),
-                const SizedBox(height: 8),
-                Text(
-                  label,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: color.withValues(alpha: 0.9),
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildCropsList(FarmProvider farm) {
+Widget _buildCropsList(FarmProvider farm) {
     final lang = Provider.of<LanguageProvider>(context);
     if (farm.crops.isEmpty) {
       return Container(
@@ -817,8 +627,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       }).toList(),
     );
   }
-
-  Widget _buildTasksList(FarmProvider farm) {
+Widget _buildTasksList(FarmProvider farm) {
     final lang = Provider.of<LanguageProvider>(context);
     final pending = farm.tasks
         .where((t) => t.status == 'Pending')
@@ -919,101 +728,40 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildIoTSummary(IoTProvider iot) {
-    final lang = Provider.of<LanguageProvider>(context);
-    final sensorsList = iot.sensors;
-    if (sensorsList.isEmpty) {
-      return Container(
-        padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          color: Colors.grey.shade50,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: Colors.grey.shade200),
-        ),
-        child: Center(
-          child: Text(
-            lang.t('No sensors connected'),
-            style: TextStyle(
-              color: Colors.grey.shade500,
-              fontWeight: FontWeight.w600,
-            ),
+  Widget _buildActionChip(
+    String label,
+    IconData icon,
+    Color color, {
+    required VoidCallback onTap,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: color.withValues(alpha: 0.2)),
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, color: color, size: 28),
+              const SizedBox(height: 8),
+              Text(
+                label,
+                style: TextStyle(
+                  color: color.withValues(alpha: 0.9),
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
           ),
         ),
-      );
-    }
-
-    return SizedBox(
-      height: 100,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        itemCount: sensorsList.length,
-        separatorBuilder: (ctx, idx) => const SizedBox(width: 12),
-        itemBuilder: (context, i) {
-          final s = sensorsList[i];
-          final reading = s.lastReading ?? 0;
-          Color color;
-          IconData icon;
-
-          switch (s.type) {
-            case 'moisture_sensor':
-              icon = Icons.water_drop;
-              color = reading < 30
-                  ? Colors.red
-                  : reading < 50
-                  ? Colors.orange
-                  : Colors.blue;
-              break;
-            case 'temp_sensor':
-              icon = Icons.thermostat;
-              color = reading > 35 ? Colors.red : Colors.green;
-              break;
-            default:
-              icon = Icons.cloud;
-              color = Colors.teal;
-          }
-
-          return Container(
-            width: 140,
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: color.withValues(alpha: 0.15)),
-            ),
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(icon, size: 20, color: color),
-                    const SizedBox(width: 8),
-                    Text(
-                      '${reading.toStringAsFixed(1)}${s.unit ?? ""}',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w800,
-                        color: color,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  s.name.split(' - ').last,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey.shade700,
-                    fontWeight: FontWeight.w600,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ),
-          );
-        },
       ),
     );
   }

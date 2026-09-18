@@ -34,7 +34,7 @@ class IrrigationEngine {
     final avgMoisture = readings.reduce((a, b) => a + b) / readings.length;
 
     // Safety Engine
-    if (weather != null && weather.precipitationProbability > 60) {
+    if (weather != null && (weather.precipitationProbability ?? 0) > 60) {
       return IrrigationDecision(false, 'High rain probability', 0);
     }
 

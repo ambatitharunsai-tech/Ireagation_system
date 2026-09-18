@@ -12,6 +12,7 @@ class IoTDevice {
   bool isActive;
   double? lastReading;
   String? unit;
+  DateTime? lastUpdatedAt;
 
   IoTDevice({
     required this.id,
@@ -21,7 +22,16 @@ class IoTDevice {
     this.isActive = false,
     this.lastReading,
     this.unit,
+    this.lastUpdatedAt,
   });
+
+  String get state {
+    if (!isOnline) return 'OFFLINE';
+    if (lastUpdatedAt == null) return 'UNKNOWN';
+    final diff = DateTime.now().difference(lastUpdatedAt!);
+    if (diff.inMinutes > 30) return 'STALE';
+    return 'LIVE';
+  }
 }
 
 class IoTService {
@@ -102,6 +112,7 @@ class IoTService {
 
       if (topic.endsWith('/telemetry')) {
         device.isOnline = true;
+        device.lastUpdatedAt = DateTime.now();
         if (data.containsKey('soil_moisture')) {
           device.lastReading = (data['soil_moisture'] as num).toDouble();
         }

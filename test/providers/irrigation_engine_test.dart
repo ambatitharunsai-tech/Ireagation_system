@@ -15,6 +15,8 @@ void main() {
           windSpeed: 10,
           precipitationProbability: 10,
           weatherCode: 0,
+timestamp: DateTime.now(),
+isCached: false,
         );
         final devices = [
           IoTDevice(
@@ -44,7 +46,9 @@ void main() {
         humidity: 40,
         windSpeed: 10,
         precipitationProbability: 70, // High rain prob
-        weatherCode: 65, // Rainy
+        weatherCode: 65,
+timestamp: DateTime.now(),
+isCached: false, // Rainy
       );
       final devices = [
         IoTDevice(id: '1', name: 'Sensor', type: 'moisture', lastReading: 25.0),
