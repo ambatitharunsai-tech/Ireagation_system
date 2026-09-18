@@ -203,4 +203,36 @@ class IoTProvider extends ChangeNotifier {
   }) async {
     return 'AI Assistant is currently advisory only. Waiting for backend AI connectivity.';
   }
+
+  void addSimulatedDevice() {
+    final newId = 'sim_${const Uuid().v4().substring(0, 6)}';
+    final isSensor = _iotService.devices.length % 2 == 0;
+    
+    final device = IoTDevice(
+      id: newId,
+      farmId: 'simulated_farm',
+      zoneId: 'Zone 1',
+      name: isSensor ? 'Soil Sensor $newId' : 'Water Pump $newId',
+      deviceType: isSensor ? 'sensor' : 'pump',
+    );
+    device.isOnline = true;
+    device.batteryLevel = 95.0;
+    device.signalStrength = '-50 dBm';
+    device.lastSeenAt = DateTime.now();
+
+    if (isSensor) {
+      device.latestTelemetry = TelemetryReading(
+        deviceId: newId,
+        soilMoisture: 35.5,
+        temperature: 25.0,
+        humidity: 60.0,
+        timestamp: DateTime.now(),
+        receivedAt: DateTime.now(),
+      );
+    }
+
+    _iotService.devices.add(device);
+    notifyListeners();
+  }
+
 }

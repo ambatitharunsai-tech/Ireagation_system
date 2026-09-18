@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/iot_provider.dart';
 import '../../providers/language_provider.dart';
+import '../../config/api_keys.dart';
 import '../tasks/task_screen.dart';
 import '../ai/ai_chat_screen.dart';
 
@@ -134,6 +135,15 @@ class _MoreScreenState extends State<MoreScreen> {
           ),
           const SizedBox(height: 8),
 
+          
+          _buildTile(
+            context,
+            icon: Icons.vpn_key,
+            color: Colors.purple,
+            title: t('API Keys'),
+            subtitle: t('Configure Gemini & IoT'),
+            onTap: () => _showApiKeysDialog(context, langProvider),
+          ),
           _buildTile(
             context,
             icon: Icons.language,
@@ -267,4 +277,68 @@ class _MoreScreenState extends State<MoreScreen> {
       ),
     );
   }
+
+  void _showApiKeysDialog(BuildContext context, LanguageProvider lang) {
+    final geminiCtrl = TextEditingController(text: ApiKeys.geminiKey);
+    final tsChannelCtrl = TextEditingController(text: ApiKeys.thingSpeakChannelId);
+    final tsKeyCtrl = TextEditingController(text: ApiKeys.thingSpeakReadKey);
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(lang.t('API Configuration')),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: geminiCtrl,
+                decoration: InputDecoration(
+                  labelText: 'Gemini API Key',
+                  hintText: 'AI Studio Key',
+                  prefixIcon: const Icon(Icons.auto_awesome),
+                ),
+                obscureText: true,
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: tsChannelCtrl,
+                decoration: InputDecoration(
+                  labelText: 'ThingSpeak Channel ID',
+                  prefixIcon: const Icon(Icons.cloud),
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: tsKeyCtrl,
+                decoration: InputDecoration(
+                  labelText: 'ThingSpeak Read Key',
+                  prefixIcon: const Icon(Icons.key),
+                ),
+                obscureText: true,
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(lang.t('Cancel')),
+          ),
+          FilledButton(
+            onPressed: () {
+              ApiKeys.setGeminiKey(geminiCtrl.text);
+              ApiKeys.setThingSpeakKeys(tsChannelCtrl.text, tsKeyCtrl.text);
+              Navigator.pop(ctx);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(lang.t('API keys saved locally!'))),
+              );
+            },
+            child: Text(lang.t('Save')),
+          ),
+        ],
+      ),
+    );
+  }
+
 }

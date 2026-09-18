@@ -132,14 +132,14 @@ class _IotDashboardScreenState extends State<IotDashboardScreen>
           ],
         ),
       ),
+      
       floatingActionButton: FloatingActionButton.extended( heroTag: "iot_fab",
-        onPressed: () {
-          // Placeholder for pairing device
-        },
+        onPressed: () => _showAddDeviceDialog(context, iot),
         backgroundColor: Colors.blue.shade700,
         icon: const Icon(Icons.add, color: Colors.white),
         label: Text(lang.t('Add Device'), style: const TextStyle(color: Colors.white)),
       ),
+
     );
   }
 
@@ -699,4 +699,43 @@ class _IotDashboardScreenState extends State<IotDashboardScreen>
     if (diff.inHours < 24) return '${diff.inHours}${lang.t('h ago')}';
     return '${diff.inDays}${lang.t('d ago')}';
   }
+
+  void _showAddDeviceDialog(BuildContext context, IoTProvider iot) {
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        final lang = Provider.of<LanguageProvider>(ctx);
+        return AlertDialog(
+          title: Text(lang.t('Pair New Device')),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.qr_code_scanner, size: 64, color: Colors.grey),
+              const SizedBox(height: 16),
+              Text(lang.t('Scan the QR code on your IoT sensor or actuator to pair it with this farm.')),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: Text(lang.t('Cancel')),
+            ),
+            FilledButton(
+              onPressed: () {
+                // Since this is a UI prototype without real physical devices,
+                // we'll inject a simulated device into the IoTProvider
+                iot.addSimulatedDevice();
+                Navigator.pop(ctx);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(lang.t('Simulated device paired!'))),
+                );
+              },
+              child: Text(lang.t('Pair Simulator')),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
 }
