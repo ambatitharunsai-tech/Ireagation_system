@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+
 import '../local_database.dart';
 
 /// Expense data model.
@@ -23,6 +24,18 @@ class Expense {
 
   Map<String, dynamic> toInsertMap() {
     return {
+      'user_id': userId,
+      'crop_id': cropId,
+      'category': category,
+      'amount': amount,
+      'date': date,
+      'notes': notes,
+    };
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
       'user_id': userId,
       'crop_id': cropId,
       'category': category,
@@ -67,6 +80,18 @@ class Sale {
 
   Map<String, dynamic> toInsertMap() {
     return {
+      'user_id': userId,
+      'crop_id': cropId,
+      'quantity': quantity,
+      'price': price,
+      'buyer': buyer,
+      'date': date,
+    };
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
       'user_id': userId,
       'crop_id': cropId,
       'quantity': quantity,

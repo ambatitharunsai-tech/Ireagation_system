@@ -1,9 +1,8 @@
 import 'dart:convert';
-
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
-/// Holds current weather information.
 class WeatherData {
   final double temperature;
   final double humidity;
@@ -28,9 +27,24 @@ class WeatherData {
     if (weatherCode <= 99) return 'Thunderstorm';
     return 'Unknown';
   }
+
+  Map<String, dynamic> toJson() => {
+    'temperature': temperature,
+    'humidity': humidity,
+    'windSpeed': windSpeed,
+    'precipitationProbability': precipitationProbability,
+    'weatherCode': weatherCode,
+  };
+
+  factory WeatherData.fromJson(Map<String, dynamic> json) => WeatherData(
+    temperature: json['temperature']?.toDouble() ?? 0.0,
+    humidity: json['humidity']?.toDouble() ?? 0.0,
+    windSpeed: json['windSpeed']?.toDouble() ?? 0.0,
+    precipitationProbability: json['precipitationProbability']?.toDouble() ?? 0.0,
+    weatherCode: json['weatherCode'] ?? 0,
+  );
 }
 
-/// Daily forecast data.
 class DailyForecast {
   final DateTime date;
   final double tempMax;
@@ -67,16 +81,30 @@ class DailyForecast {
   }
 }
 
-/// Fetches real weather data from the Open-Meteo API (free, no key required).
 class WeatherService {
   static const String _baseUrl = 'https://api.open-meteo.com/v1/forecast';
+  static const String _cacheKey = 'weather_cache';
+  static const String _cacheTimeKey = 'weather_cache_time';
+  static const int _cacheDurationMinutes = 30;
 
-  /// Fetch current weather for given coordinates.
-  /// Defaults to Bangalore, India (12.97, 77.59) if no coordinates provided.
   Future<WeatherData?> fetchWeather({
     double lat = 12.97,
     double lon = 77.59,
   }) async {
+    final prefs = await SharedPreferences.getInstance();
+    
+    // Check cache
+    final cacheTime = prefs.getString(_cacheTimeKey);
+    if (cacheTime != null) {
+      final lastFetch = DateTime.parse(cacheTime);
+      if (DateTime.now().difference(lastFetch).inMinutes < _cacheDurationMinutes) {
+        final cachedData = prefs.getString(_cacheKey);
+        if (cachedData != null) {
+          return WeatherData.fromJson(json.decode(cachedData));
+        }
+      }
+    }
+
     final url = Uri.parse(
       '$_baseUrl?latitude=$lat&longitude=$lon'
       '&current=temperature_2m,relative_humidity_2m,precipitation_probability,weather_code,wind_speed_10m',
@@ -89,22 +117,31 @@ class WeatherService {
         final current = data['current'];
         if (current == null) return null;
 
-        return WeatherData(
+        final weather = WeatherData(
           temperature: (current['temperature_2m'] ?? 0).toDouble(),
           humidity: (current['relative_humidity_2m'] ?? 0).toDouble(),
-          precipitationProbability: (current['precipitation_probability'] ?? 0)
-              .toDouble(),
+          precipitationProbability: (current['precipitation_probability'] ?? 0).toDouble(),
           weatherCode: current['weather_code'] ?? 0,
           windSpeed: (current['wind_speed_10m'] ?? 0).toDouble(),
         );
+
+        // Update cache
+        await prefs.setString(_cacheKey, json.encode(weather.toJson()));
+        await prefs.setString(_cacheTimeKey, DateTime.now().toIso8601String());
+
+        return weather;
       }
     } catch (e) {
       debugPrint('WeatherService.fetchWeather error: $e');
+      // On network error, try to return cached data even if expired
+      final cachedData = prefs.getString(_cacheKey);
+      if (cachedData != null) {
+        return WeatherData.fromJson(json.decode(cachedData));
+      }
     }
     return null;
   }
 
-  /// Fetch 7-day daily forecast.
   Future<List<DailyForecast>> fetchForecast({
     double lat = 12.97,
     double lon = 77.59,

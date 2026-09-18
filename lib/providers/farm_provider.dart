@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 
+import '../data/repositories/farm_repository.dart';
 import '../database/daos/crop_dao.dart';
 import '../database/daos/task_dao.dart';
+import '../services/local_cache_service.dart';
 
-/// Manages crop and task state with error resilience.
 class FarmProvider extends ChangeNotifier {
-  final CropDao _cropDao = CropDao();
-  final TaskDao _taskDao = TaskDao();
+  final FarmRepository _repo = FarmRepository();
+  final LocalCacheService _cache = LocalCacheService();
 
   List<Crop> _crops = [];
   List<FarmTask> _tasks = [];
@@ -27,11 +28,26 @@ class FarmProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      _crops = await _cropDao.getCropsByUser(userId);
-      _tasks = await _taskDao.getTasksByUser(userId);
+      _crops = await _repo.getCropsByUser(userId);
+      _tasks = await _repo.getTasksByUser(userId);
+      
+      // Update Cache
+      await _cache.saveFarmData(userId, {
+        'crops': _crops.map((c) => c.toMap()).toList(),
+        'tasks': _tasks.map((t) => t.toMap()).toList(),
+      });
     } catch (e) {
-      _error = 'Could not load farm data. Check your connection.';
+      _error = 'Could not load farm data from server. Attempting offline cache...';
       debugPrint('FarmProvider.loadData error: $e');
+      
+      // Fallback to cache
+      final cached = await _cache.getFarmData(userId);
+      if (cached != null) {
+        _crops = (cached['crops'] as List).map((c) => Crop.fromMap(c)).toList();
+        _tasks = (cached['tasks'] as List).map((t) => FarmTask.fromMap(t)).toList();
+      } else {
+        _error = 'No offline data available. Please check connection.';
+      }
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -40,7 +56,7 @@ class FarmProvider extends ChangeNotifier {
 
   Future<bool> addCrop(Crop crop) async {
     try {
-      final saved = await _cropDao.insertCrop(crop);
+      final saved = await _repo.insertCrop(crop);
       _crops.insert(0, saved);
       notifyListeners();
       return true;
@@ -54,7 +70,7 @@ class FarmProvider extends ChangeNotifier {
 
   Future<bool> updateCrop(Crop crop) async {
     try {
-      await _cropDao.updateCrop(crop);
+      await _repo.updateCrop(crop);
       final index = _crops.indexWhere((c) => c.id == crop.id);
       if (index != -1) _crops[index] = crop;
       notifyListeners();
@@ -68,7 +84,7 @@ class FarmProvider extends ChangeNotifier {
 
   Future<bool> deleteCrop(String cropId) async {
     try {
-      await _cropDao.deleteCrop(cropId);
+      await _repo.deleteCrop(cropId);
       _crops.removeWhere((c) => c.id == cropId);
       notifyListeners();
       return true;
@@ -81,8 +97,8 @@ class FarmProvider extends ChangeNotifier {
 
   Future<bool> addTask(FarmTask task) async {
     try {
-      final saved = await _taskDao.insertTask(task);
-      _tasks.add(saved);
+      final saved = await _repo.insertTask(task);
+      _tasks.insert(0, saved);
       notifyListeners();
       return true;
     } catch (e) {
@@ -94,7 +110,7 @@ class FarmProvider extends ChangeNotifier {
 
   Future<bool> updateTask(FarmTask task) async {
     try {
-      await _taskDao.updateTask(task);
+      await _repo.updateTask(task);
       final index = _tasks.indexWhere((t) => t.id == task.id);
       if (index != -1) _tasks[index] = task;
       notifyListeners();
@@ -108,7 +124,7 @@ class FarmProvider extends ChangeNotifier {
 
   Future<bool> deleteTask(String taskId) async {
     try {
-      await _taskDao.deleteTask(taskId);
+      await _repo.deleteTask(taskId);
       _tasks.removeWhere((t) => t.id == taskId);
       notifyListeners();
       return true;

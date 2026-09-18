@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+
 import '../local_database.dart';
 
 /// Task data model.
@@ -45,6 +46,19 @@ class FarmTask {
     };
   }
 
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'user_id': userId,
+      'crop_id': cropId,
+      'title': title,
+      'date': date,
+      'priority': priority,
+      'status': status,
+      'notes': notes,
+    };
+  }
+
   factory FarmTask.fromMap(Map<String, dynamic> map) {
     return FarmTask(
       id: map['id'] ?? '',
@@ -73,7 +87,7 @@ class TaskDao {
 
   Future<void> updateTask(FarmTask task) async {
     // In our LocalDatabase, updateTaskStatus modifies status, but we can reuse insert for full updates
-    await _db.insertTask(task); 
+    await _db.insertTask(task);
   }
 
   Future<void> deleteTask(String taskId) async {

@@ -1,55 +1,36 @@
-# Smart Agriculture & Irrigation System 🌱
+# Ireagation System 🌱
 
-A modern, production-ready Flutter application designed to help farmers and agricultural businesses manage their crops, automate irrigation through IoT, track finances, and receive AI-driven advice.
+A comprehensive Smart Agriculture & Intelligent Irrigation application built with Flutter and Supabase.
 
-## ✨ Features
+## Features
 
-- **Dashboard & Analytics**: Real-time sparkline graphs that compute cumulative historical data for crops, tasks, and profit directly from the database.
-- **Farm Management**: Track crop sowing dates, area sizes, and growth stages. Manage daily farming tasks with priorities and statuses.
-- **Financial Tracking**: Log sales and expenses, and automatically compute total revenue and net profit.
-- **IoT & Automation Ready**: Built-in framework to handle real-world moisture sensors, temperature/humidity sensors, water pumps, and valves. Generates critical alerts when thresholds are crossed.
-- **AI Farm Assistant**: Powered by Google's **Gemini API**. It reads active crops, financial health, live IoT sensor data, and current weather, compiling it to provide highly contextual, real-time farming advice.
-- **Live Weather Integration**: Fetches real-time climate data and a 7-day forecast using the free Open-Meteo API.
+- **Dashboard:** Unified view of crops, tasks, IoT sensors, and financial health.
+- **Crop Management:** Add, update, and track the growth stages of various crops with expected harvest dates.
+- **Task Tracking:** Prioritized todo lists for daily farm operations.
+- **Finance:** Income and expense tracking for precise yield and profit calculations.
+- **IoT & Automation:** Real-time MQTT telemetry from soil moisture and temperature sensors. Automated irrigation pump control using a deterministic rules engine.
+- **AI Agronomist:** (Edge Function) Expert agricultural recommendations powered by Google Gemini AI, running securely on the backend.
+- **Offline Support:** Seamless UI operation during network drops using local caching.
+- **Weather Integration:** Live Open-Meteo forecasts combined with irrigation algorithms to conserve water (e.g., skip watering if high rain probability).
 
-## 🛠 Tech Stack
+## Architecture
 
-* **Frontend**: Flutter (Dart)
-* **State Management**: `provider` (MultiProvider architecture)
-* **Storage**: Offline-first JSON local database using `shared_preferences` (Architected with DAOs for easy migration to Supabase/Firebase)
-* **UI/UX**: Material 3, `google_fonts` (Outfit), `fl_chart` for data visualization.
+- **Frontend:** Flutter (State management via `Provider`).
+- **Backend:** Supabase (PostgreSQL with strict Row Level Security).
+- **IoT Messaging:** MQTT Broker.
+- **AI Processing:** Supabase Edge Functions + Gemini API.
 
-## 🚀 Getting Started
+## Setup Instructions
 
-1. **Clone the repository**
+1. Clone the repository.
+2. Ensure you have Flutter installed (`flutter doctor`).
+3. Set up a Supabase project and execute the migrations in `supabase/migrations/` in order.
+4. Pass your Supabase URL and Anon Key via environment variables:
    ```bash
-   git clone <your-repo-url>
-   cd Ireagation_system
+   flutter run --dart-define=SUPABASE_URL=YOUR_URL --dart-define=SUPABASE_ANON_KEY=YOUR_KEY
    ```
+5. Run `flutter pub get`.
+6. Run the app on your preferred emulator or device.
 
-2. **Install dependencies**
-   ```bash
-   flutter pub get
-   ```
-
-3. **Run the app**
-   ```bash
-   flutter run
-   ```
-
-## 🧠 AI Integration (Gemini)
-
-To enable the AI Farm Assistant:
-1. Get a Gemini API Key from Google AI Studio.
-2. Open the app and navigate to **Settings** → **API Keys**.
-3. Enter your Gemini API key. The app will immediately start using live contextual data to generate smart farming advice.
-
-## 🔌 IoT Integration
-
-The `IoTService` (`lib/services/iot_service.dart`) is currently configured for a real-world production environment (simulation data has been removed). To connect physical sensors (ESP32/Arduino):
-1. Integrate an MQTT client package (e.g., `mqtt_client`).
-2. Subscribe to your sensor telemetry topics in `startSimulation()`.
-3. Call `onDevicesUpdated` when new telemetry arrives to instantly update the UI and trigger Auto-Irrigation logic.
-
-## 📄 License
-
-This project is licensed under the MIT License.
+## CI/CD
+Automated testing and APK generation via GitHub Actions is included.

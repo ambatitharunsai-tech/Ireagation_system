@@ -10,10 +10,7 @@ class AddFinanceDialog extends StatefulWidget {
   const AddFinanceDialog({super.key});
 
   static void show(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (ctx) => const AddFinanceDialog(),
-    );
+    showDialog(context: context, builder: (ctx) => const AddFinanceDialog());
   }
 
   @override

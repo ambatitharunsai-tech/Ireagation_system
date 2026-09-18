@@ -213,8 +213,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-
-
   Widget _buildErrorBanner(String message, VoidCallback onDismiss) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -422,7 +420,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   List<double> _computeCumulativeDates(List<String> dates) {
     if (dates.isEmpty) return [];
-    final parsed = dates.map((d) => DateTime.tryParse(d)).whereType<DateTime>().toList();
+    final parsed = dates
+        .map((d) => DateTime.tryParse(d))
+        .whereType<DateTime>()
+        .toList();
     if (parsed.isEmpty) return [];
     parsed.sort();
     List<double> counts = [];
@@ -444,11 +445,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
       allTx.add({'date': e.date, 'amount': -e.amount});
     }
     for (final s in finance.sales) {
-      allTx.add({'date': s.date, 'amount': s.amount});
+      allTx.add({'date': s.date, 'amount': (s.price * s.quantity)});
     }
     if (allTx.isEmpty) return [];
-    allTx.sort((a, b) => (a['date'] as DateTime).compareTo(b['date'] as DateTime));
-    
+    allTx.sort(
+      (a, b) => (a['date'] as DateTime).compareTo(b['date'] as DateTime),
+    );
+
     List<double> profit = [];
     double current = 0;
     for (final tx in allTx) {
@@ -466,9 +469,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
     FinanceProvider finance,
     ThemeData theme,
   ) {
-    final cropsHistory = _computeCumulativeDates(farm.crops.map((c) => c.sowingDate).toList());
-    final activeCropsHistory = _computeCumulativeDates(farm.crops.where((c) => c.status == 'Active').map((c) => c.sowingDate).toList());
-    final tasksHistory = _computeCumulativeDates(farm.tasks.map((t) => t.date).toList());
+    final cropsHistory = _computeCumulativeDates(
+      farm.crops.map((c) => c.sowingDate).whereType<String>().toList(),
+    );
+    final activeCropsHistory = _computeCumulativeDates(
+      farm.crops
+          .where((c) => c.status == 'Active')
+          .map((c) => c.sowingDate)
+          .whereType<String>()
+          .toList(),
+    );
+    final tasksHistory = _computeCumulativeDates(
+      farm.tasks.map((t) => t.date).toList(),
+    );
     final profitHistory = _computeProfitHistory(finance);
 
     return GridView.count(
@@ -552,10 +565,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       spots: sparklineData.isEmpty
                           ? [const FlSpot(0, 0), const FlSpot(1, 0)]
                           : sparklineData
-                              .asMap()
-                              .entries
-                              .map((e) => FlSpot(e.key.toDouble(), e.value))
-                              .toList(),
+                                .asMap()
+                                .entries
+                                .map((e) => FlSpot(e.key.toDouble(), e.value))
+                                .toList(),
                       isCurved: true,
                       color: color.withValues(alpha: 0.5),
                       barWidth: 3,
@@ -612,7 +625,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildActionChip(String label, IconData icon, Color color, {VoidCallback? onTap}) {
+  Widget _buildActionChip(
+    String label,
+    IconData icon,
+    Color color, {
+    VoidCallback? onTap,
+  }) {
     return Expanded(
       child: InkWell(
         borderRadius: BorderRadius.circular(12),

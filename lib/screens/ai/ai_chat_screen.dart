@@ -87,7 +87,7 @@ class _AiChatScreenState extends State<AiChatScreen> {
     final farm = Provider.of<FarmProvider>(context, listen: false);
     final finance = Provider.of<FinanceProvider>(context, listen: false);
     final iot = Provider.of<IoTProvider>(context, listen: false);
-    
+
     final analysis = await iot.getAiResponse(
       'Give me a comprehensive farm health analysis. Check all sensor readings, weather conditions, crop statuses, pending tasks, and recent finances. Identify any issues and provide specific recommendations.',
       crops: farm.crops,

@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 import '../../providers/iot_provider.dart';
 import '../../providers/farm_provider.dart';
 import '../../services/iot_service.dart';
-import '../../services/ai_agent.dart';
 
 class IoTDashboardScreen extends StatelessWidget {
   const IoTDashboardScreen({super.key});
@@ -223,7 +222,7 @@ class IoTDashboardScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildLogTile(AgentLog log) {
+  Widget _buildLogTile(dynamic log) {
     final color = log.type == 'action'
         ? Colors.blue
         : log.type == 'error'

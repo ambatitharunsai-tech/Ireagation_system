@@ -1,7 +1,8 @@
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter/foundation.dart';
-import '../database/local_database.dart';
 
-/// User model for the application.
+import '../config/supabase_config.dart';
+
 class AppUser {
   final String id;
   final String name;
@@ -56,23 +57,54 @@ class AppUser {
   }
 }
 
-/// Handles authentication operations using LocalDatabase.
 class AuthService {
-  final LocalDatabase _db = LocalDatabase.instance;
+  final SupabaseClient _supabase = Supabase.instance.client;
 
   Future<AppUser?> login(String email, String password) async {
-    return await _db.login(email, password);
+    final response = await _supabase.auth.signInWithPassword(
+      email: email,
+      password: password,
+    );
+    if (response.user != null) {
+      return await _fetchProfile(response.user!.id, email);
+    }
+    return null;
   }
 
   Future<AppUser> register(String name, String email, String password) async {
-    return await _db.register(name, email, password);
+    final response = await _supabase.auth.signUp(
+      email: email,
+      password: password,
+    );
+    
+    final userId = response.user!.id;
+    
+    // Create profile
+    final profile = AppUser(id: userId, name: name, email: email);
+    await _supabase.from('profiles').insert(profile.toMap());
+    
+    return profile;
+  }
+  
+  Future<AppUser?> getCurrentUser() async {
+    final user = _supabase.auth.currentUser;
+    if (user != null) {
+      return await _fetchProfile(user.id, user.email ?? '');
+    }
+    return null;
+  }
+
+  Future<AppUser> _fetchProfile(String userId, String email) async {
+    final data = await _supabase.from('profiles').select().eq('id', userId).single();
+    final profile = AppUser.fromMap(data);
+    return profile;
   }
 
   Future<void> updateProfile(AppUser user) async {
-    await _db.updateProfile(user);
+    await _supabase.from('profiles').update(user.toMap()).eq('id', user.id);
   }
 
   Future<void> logout() async {
-    // Local DB has no active session state to clear
+    await _supabase.auth.signOut();
   }
 }

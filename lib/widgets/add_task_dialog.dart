@@ -10,10 +10,7 @@ class AddTaskDialog extends StatefulWidget {
   const AddTaskDialog({super.key});
 
   static void show(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (ctx) => const AddTaskDialog(),
-    );
+    showDialog(context: context, builder: (ctx) => const AddTaskDialog());
   }
 
   @override
@@ -67,9 +64,12 @@ class _AddTaskDialogState extends State<AddTaskDialog> {
         FilledButton(
           onPressed: () {
             if (_titleCtrl.text.trim().isEmpty) return;
-            final user = Provider.of<AuthProvider>(context, listen: false).currentUser!;
+            final user = Provider.of<AuthProvider>(
+              context,
+              listen: false,
+            ).currentUser!;
             final farm = Provider.of<FarmProvider>(context, listen: false);
-            
+
             farm.addTask(
               FarmTask(
                 id: '',

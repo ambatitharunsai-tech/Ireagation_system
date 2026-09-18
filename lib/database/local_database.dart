@@ -1,4 +1,5 @@
 import 'dart:convert';
+
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 
@@ -25,7 +26,7 @@ class LocalDatabase {
     final p = await prefs;
     final usersStr = p.getString('users') ?? '{}';
     final users = json.decode(usersStr) as Map<String, dynamic>;
-    
+
     for (var u in users.values) {
       if (u['email'] == email && u['password'] == password) {
         return AppUser.fromMap(u);
@@ -38,7 +39,7 @@ class LocalDatabase {
     final p = await prefs;
     final usersStr = p.getString('users') ?? '{}';
     final users = json.decode(usersStr) as Map<String, dynamic>;
-    
+
     for (var u in users.values) {
       if (u['email'] == email) {
         throw Exception('User already registered');
@@ -52,10 +53,10 @@ class LocalDatabase {
       'email': email,
       'password': password,
     };
-    
+
     users[id] = newUser;
     await p.setString('users', json.encode(users));
-    
+
     return AppUser.fromMap(newUser);
   }
 
@@ -63,13 +64,10 @@ class LocalDatabase {
     final p = await prefs;
     final usersStr = p.getString('users') ?? '{}';
     final users = json.decode(usersStr) as Map<String, dynamic>;
-    
+
     if (users.containsKey(user.id)) {
       final existing = users[user.id];
-      users[user.id] = {
-        ...existing,
-        ...user.toMap(),
-      };
+      users[user.id] = {...existing, ...user.toMap()};
       await p.setString('users', json.encode(users));
     }
   }
@@ -80,11 +78,11 @@ class LocalDatabase {
     final id = crop.id.isEmpty ? _uuid.v4() : crop.id;
     final cropsStr = p.getString('crops') ?? '{}';
     final crops = json.decode(cropsStr) as Map<String, dynamic>;
-    
+
     final map = crop.toInsertMap();
     map['id'] = id;
     crops[id] = map;
-    
+
     await p.setString('crops', json.encode(crops));
     return Crop.fromMap(map);
   }
@@ -93,7 +91,7 @@ class LocalDatabase {
     final p = await prefs;
     final cropsStr = p.getString('crops') ?? '{}';
     final crops = json.decode(cropsStr) as Map<String, dynamic>;
-    
+
     return crops.values
         .where((c) => c['user_id'] == userId)
         .map((c) => Crop.fromMap(c as Map<String, dynamic>))
@@ -118,11 +116,11 @@ class LocalDatabase {
     final id = task.id.isEmpty ? _uuid.v4() : task.id;
     final tasksStr = p.getString('tasks') ?? '{}';
     final tasks = json.decode(tasksStr) as Map<String, dynamic>;
-    
+
     final map = task.toInsertMap();
     map['id'] = id;
     tasks[id] = map;
-    
+
     await p.setString('tasks', json.encode(tasks));
     return FarmTask.fromMap(map);
   }
@@ -131,7 +129,7 @@ class LocalDatabase {
     final p = await prefs;
     final tasksStr = p.getString('tasks') ?? '{}';
     final tasks = json.decode(tasksStr) as Map<String, dynamic>;
-    
+
     return tasks.values
         .where((t) => t['user_id'] == userId)
         .map((t) => FarmTask.fromMap(t as Map<String, dynamic>))
@@ -142,7 +140,7 @@ class LocalDatabase {
     final p = await prefs;
     final tasksStr = p.getString('tasks') ?? '{}';
     final tasks = json.decode(tasksStr) as Map<String, dynamic>;
-    
+
     if (tasks.containsKey(taskId)) {
       tasks[taskId]['status'] = status;
       await p.setString('tasks', json.encode(tasks));
@@ -163,11 +161,11 @@ class LocalDatabase {
     final id = expense.id.isEmpty ? _uuid.v4() : expense.id;
     final expensesStr = p.getString('expenses') ?? '{}';
     final expenses = json.decode(expensesStr) as Map<String, dynamic>;
-    
+
     final map = expense.toInsertMap();
     map['id'] = id;
     expenses[id] = map;
-    
+
     await p.setString('expenses', json.encode(expenses));
     return Expense.fromMap(map);
   }
@@ -176,7 +174,7 @@ class LocalDatabase {
     final p = await prefs;
     final expensesStr = p.getString('expenses') ?? '{}';
     final expenses = json.decode(expensesStr) as Map<String, dynamic>;
-    
+
     final list = expenses.values
         .where((e) => e['user_id'] == userId)
         .map((e) => Expense.fromMap(e as Map<String, dynamic>))
@@ -198,11 +196,11 @@ class LocalDatabase {
     final id = sale.id.isEmpty ? _uuid.v4() : sale.id;
     final salesStr = p.getString('sales') ?? '{}';
     final sales = json.decode(salesStr) as Map<String, dynamic>;
-    
+
     final map = sale.toInsertMap();
     map['id'] = id;
     sales[id] = map;
-    
+
     await p.setString('sales', json.encode(sales));
     return Sale.fromMap(map);
   }
@@ -211,7 +209,7 @@ class LocalDatabase {
     final p = await prefs;
     final salesStr = p.getString('sales') ?? '{}';
     final sales = json.decode(salesStr) as Map<String, dynamic>;
-    
+
     final list = sales.values
         .where((s) => s['user_id'] == userId)
         .map((s) => Sale.fromMap(s as Map<String, dynamic>))

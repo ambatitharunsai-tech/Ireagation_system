@@ -9,10 +9,7 @@ class AddCropDialog extends StatefulWidget {
   const AddCropDialog({super.key});
 
   static void show(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (ctx) => const AddCropDialog(),
-    );
+    showDialog(context: context, builder: (ctx) => const AddCropDialog());
   }
 
   @override
@@ -61,7 +58,7 @@ class _AddCropDialogState extends State<AddCropDialog> {
             ),
             const SizedBox(height: 12),
             DropdownButtonFormField<String>(
-              value: _growthStage,
+              initialValue: _growthStage,
               decoration: const InputDecoration(labelText: 'Growth Stage'),
               items: [
                 'Seedling',
@@ -76,13 +73,15 @@ class _AddCropDialogState extends State<AddCropDialog> {
             ),
             const SizedBox(height: 12),
             DropdownButtonFormField<String>(
-              value: _irrigationMethod,
-              decoration: const InputDecoration(
-                labelText: 'Irrigation Method',
-              ),
-              items: ['Drip', 'Sprinkler', 'Flood', 'Furrow', 'Rain-fed']
-                  .map((s) => DropdownMenuItem(value: s, child: Text(s)))
-                  .toList(),
+              initialValue: _irrigationMethod,
+              decoration: const InputDecoration(labelText: 'Irrigation Method'),
+              items: [
+                'Drip',
+                'Sprinkler',
+                'Flood',
+                'Furrow',
+                'Rain-fed',
+              ].map((s) => DropdownMenuItem(value: s, child: Text(s))).toList(),
               onChanged: (v) {
                 if (v != null) setState(() => _irrigationMethod = v);
               },
@@ -109,12 +108,15 @@ class _AddCropDialogState extends State<AddCropDialog> {
             if (_nameCtrl.text.trim().isEmpty) return;
             final user = Provider.of<AuthProvider>(context, listen: false).currentUser!;
             final farm = Provider.of<FarmProvider>(context, listen: false);
+            final messenger = ScaffoldMessenger.of(context);
+            final nav = Navigator.of(context);
+            final name = _nameCtrl.text.trim();
 
             final success = await farm.addCrop(
               Crop(
-                id: '', // Supabase will generate UUID (or Local DB)
+                id: '', 
                 userId: user.id,
-                name: _nameCtrl.text.trim(),
+                name: name,
                 area: double.tryParse(_areaCtrl.text),
                 growthStage: _growthStage,
                 irrigationMethod: _irrigationMethod,
@@ -124,15 +126,14 @@ class _AddCropDialogState extends State<AddCropDialog> {
             );
 
             if (mounted) {
-              Navigator.pop(context);
+              nav.pop();
               if (success) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('${_nameCtrl.text} added successfully!')),
-                );
+                messenger.showSnackBar(SnackBar(content: Text('$name added successfully!')));
               }
             }
           },
           child: const Text('Save'),
+        ),
         ),
       ],
     );

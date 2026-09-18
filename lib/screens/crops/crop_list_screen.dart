@@ -322,8 +322,6 @@ class CropListScreen extends StatelessWidget {
     );
   }
 
-
-
   void _showEditCropDialog(BuildContext context, Crop crop, FarmProvider farm) {
     final nameCtrl = TextEditingController(text: crop.name);
     final areaCtrl = TextEditingController(text: crop.area?.toString() ?? '');
@@ -393,13 +391,15 @@ class CropListScreen extends StatelessWidget {
               onPressed: () => Navigator.pop(ctx),
               child: const Text('Cancel'),
             ),
-              FilledButton(
+            FilledButton(
               onPressed: () {
                 crop.name = nameCtrl.text.trim();
                 crop.area = double.tryParse(areaCtrl.text);
                 crop.growthStage = growthStage;
                 crop.status = status;
-                crop.notes = notesCtrl.text.trim().isNotEmpty ? notesCtrl.text.trim() : null;
+                crop.notes = notesCtrl.text.trim().isNotEmpty
+                    ? notesCtrl.text.trim()
+                    : null;
                 farm.updateCrop(crop);
                 Navigator.pop(ctx);
               },

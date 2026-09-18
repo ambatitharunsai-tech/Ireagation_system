@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+
 import '../local_database.dart';
 
 /// Crop data model.
@@ -46,6 +47,22 @@ class Crop {
 
   Map<String, dynamic> toUpdateMap() {
     return {
+      'name': name,
+      'status': status,
+      'growth_stage': growthStage,
+      'sowing_date': sowingDate,
+      'expected_harvest_date': expectedHarvestDate,
+      'area': area,
+      'soil_type': soilType,
+      'irrigation_method': irrigationMethod,
+      'notes': notes,
+    };
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'user_id': userId,
       'name': name,
       'status': status,
       'growth_stage': growthStage,
