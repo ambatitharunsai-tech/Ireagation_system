@@ -14,12 +14,12 @@ import 'screens/dashboard/main_layout.dart';
 import 'screens/auth/login_screen.dart';
 
 void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
   try {
     await dotenv.load(fileName: ".env");
   } catch (e) {
     debugPrint("No .env file found. Falling back to dart-defines.");
   }
-  WidgetsFlutterBinding.ensureInitialized();
 
   await Supabase.initialize(
     url: SupabaseConfig.url,
