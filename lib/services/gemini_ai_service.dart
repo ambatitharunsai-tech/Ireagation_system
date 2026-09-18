@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '../services/iot_service.dart';
+import '../models/iot_models.dart';
 import '../database/daos/crop_dao.dart';
 import '../database/daos/task_dao.dart';
 import '../database/daos/finance_dao.dart';
@@ -25,8 +25,8 @@ class GeminiAIService {
             .map(
               (d) => {
                 'name': d.name,
-                'type': d.type,
-                'lastReading': d.lastReading,
+                'type': d.deviceType,
+                'lastReading': d.latestTelemetry?.soilMoisture,
                 'isOnline': d.isOnline,
               },
             )

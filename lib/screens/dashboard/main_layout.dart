@@ -50,7 +50,7 @@ class _MainLayoutState extends State<MainLayout> {
 
     final pages = [
       const DashboardScreen(),
-      const IoTDashboardScreen(),
+      const IotDashboardScreen(),
       const CropListScreen(),
       const FinanceScreen(),
       const MoreScreen(),

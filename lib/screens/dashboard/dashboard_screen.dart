@@ -323,10 +323,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final actuators = iot.actuators;
     final pump = actuators.isNotEmpty ? actuators.first : null;
     
-    final moistureSensors = iot.sensors.where((s) => s.type == 'moisture_sensor');
+    final moistureSensors = iot.sensors.where((s) => s.deviceType == 'moisture_sensor');
     String moisture = lang.t('No data');
-    if (moistureSensors.isNotEmpty && moistureSensors.first.lastReading != null) {
-      moisture = '${moistureSensors.first.lastReading!.toStringAsFixed(1)}%';
+    if (moistureSensors.isNotEmpty && moistureSensors.first.latestTelemetry?.soilMoisture != null) {
+      moisture = '${moistureSensors.first.latestTelemetry?.soilMoisture!.toStringAsFixed(1)}%';
     }
 
     return Column(
@@ -364,10 +364,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 children: [
                   Text(lang.t('Pump State:'), style: TextStyle(color: Colors.grey.shade600)),
                   Text(
-                    pump == null ? lang.t('UNKNOWN') : (!pump.isOnline ? lang.t('OFFLINE') : (pump.isActive ? lang.t('ON') : lang.t('OFF'))),
+                    pump == null ? lang.t('UNKNOWN') : (!pump.isOnline ? lang.t('OFFLINE') : ((pump.currentPumpState == 'ON' || pump.currentValveState == 'ON') ? lang.t('ON') : lang.t('OFF'))),
                     style: TextStyle(
                       fontWeight: FontWeight.bold, 
-                      color: pump == null ? Colors.grey : (!pump.isOnline ? Colors.orange : (pump.isActive ? Colors.green : Colors.red)),
+                      color: pump == null ? Colors.grey : (!pump.isOnline ? Colors.orange : ((pump.currentPumpState == 'ON' || pump.currentValveState == 'ON') ? Colors.green : Colors.red)),
                     ),
                   ),
                 ],
@@ -435,7 +435,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             child: ListTile(
               leading: Icon(Icons.warning_amber_rounded, color: color),
               title: Text(lang.t(alert.message), style: TextStyle(fontWeight: FontWeight.bold, color: color.shade700)),
-              subtitle: Text(DateFormat.jm().format(alert.timestamp), style: TextStyle(fontSize: 12, color: color.shade600)),
+              subtitle: Text(DateFormat.jm().format(alert.createdAt), style: TextStyle(fontSize: 12, color: color.shade600)),
             ),
           );
         }),

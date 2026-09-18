@@ -1,4 +1,4 @@
-import '../services/iot_service.dart';
+import '../models/iot_models.dart';
 import '../services/weather_service.dart';
 
 class IrrigationDecision {
@@ -18,14 +18,14 @@ class IrrigationEngine {
   }) {
     if (!isAutoMode) return IrrigationDecision(false, 'Auto mode disabled', 0);
 
-    final moistureSensors = devices.where((d) => d.type.contains('moisture'));
+    final moistureSensors = devices.where((d) => d.deviceType.contains('moisture'));
     if (moistureSensors.isEmpty) {
       return IrrigationDecision(false, 'No sensors', 0);
     }
 
     final readings = moistureSensors
-        .where((d) => d.lastReading != null)
-        .map((d) => d.lastReading!)
+        .where((d) => d.latestTelemetry?.soilMoisture != null)
+        .map((d) => d.latestTelemetry!.soilMoisture!)
         .toList();
     if (readings.isEmpty) {
       return IrrigationDecision(false, 'No valid readings', 0);
