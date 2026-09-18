@@ -15,7 +15,6 @@ class FarmRepository {
           .order('created_at', ascending: false);
       return data.map((json) => Crop.fromMap(json)).toList();
     } catch (e) {
-      // Fallback if created_at doesn't exist yet
       final data = await _supabase.from('crops').select().eq('user_id', userId);
       return data.map((json) => Crop.fromMap(json)).toList();
     }
@@ -37,6 +36,8 @@ class FarmRepository {
   Future<void> deleteCrop(String cropId) async {
     await _supabase.from('crops').delete().eq('id', cropId);
   }
+
+  // --- Tasks ---
 
   Future<List<FarmTask>> getTasksByUser(String userId) async {
     try {
@@ -67,5 +68,34 @@ class FarmRepository {
 
   Future<void> deleteTask(String taskId) async {
     await _supabase.from('tasks').delete().eq('id', taskId);
+  }
+
+  // --- Harvests ---
+
+  Future<List<Harvest>> getHarvestsByCrop(String cropId) async {
+    try {
+      final data = await _supabase
+          .from('harvests')
+          .select()
+          .eq('crop_id', cropId)
+          .order('harvest_date', ascending: false);
+      return data.map((json) => Harvest.fromMap(json)).toList();
+    } catch (e) {
+      // Return empty if table doesn't exist yet in remote
+      return [];
+    }
+  }
+
+  Future<Harvest> insertHarvest(Harvest harvest) async {
+    final data = await _supabase
+        .from('harvests')
+        .insert(harvest.toInsertMap())
+        .select()
+        .single();
+    return Harvest.fromMap(data);
+  }
+
+  Future<void> deleteHarvest(String harvestId) async {
+    await _supabase.from('harvests').delete().eq('id', harvestId);
   }
 }

@@ -7,6 +7,7 @@ import '../../providers/auth_provider.dart';
 import '../../providers/language_provider.dart';
 import '../../database/daos/crop_dao.dart';
 import '../../widgets/add_crop_dialog.dart';
+import 'crop_detail_screen.dart';
 
 class CropListScreen extends StatefulWidget {
   const CropListScreen({super.key});
@@ -473,180 +474,13 @@ class _CropListScreenState extends State<CropListScreen> {
     );
   }
 
-  void _showCropDetails(
-    BuildContext context,
-    Crop crop,
-    LanguageProvider lang,
-  ) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (ctx) => DraggableScrollableSheet(
-        initialChildSize: 0.6,
-        minChildSize: 0.4,
-        maxChildSize: 0.9,
-        expand: false,
-        builder: (ctx, controller) => SingleChildScrollView(
-          controller: controller,
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade300,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 24),
-              Text(
-                crop.name,
-                style: const TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              if (crop.variety != null)
-                Text(
-                  crop.variety!,
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.grey.shade600,
-                    fontStyle: FontStyle.italic,
-                  ),
-                ),
-              const SizedBox(height: 24),
-              _detailRow(lang.t('Status'), lang.t(crop.status)),
-              _detailRow(
-                lang.t('Growth Stage'),
-                crop.growthStage != null
-                    ? lang.t(crop.growthStage!)
-                    : lang.t('Not set'),
-              ),
-              _detailRow(
-                lang.t('Area'),
-                crop.area != null
-                    ? '${crop.area} ${lang.t(crop.areaUnit ?? 'acres')}'
-                    : lang.t('Not set'),
-              ),
-              _detailRow(
-                lang.t('Soil Type'),
-                crop.soilType != null
-                    ? lang.t(crop.soilType!)
-                    : lang.t('Not set'),
-              ),
-              _detailRow(
-                lang.t('Irrigation'),
-                crop.irrigationMethod != null
-                    ? lang.t(crop.irrigationMethod!)
-                    : lang.t('Not set'),
-              ),
-              _detailRow(
-                lang.t('Seed Source'),
-                crop.seedSource ?? lang.t('Not set'),
-              ),
-              _detailRow(
-                lang.t('Planting Density'),
-                crop.plantingDensity != null
-                    ? '${crop.plantingDensity}'
-                    : lang.t('Not set'),
-              ),
-              _detailRow(
-                lang.t('Sowing Date'),
-                crop.sowingDate != null
-                    ? DateFormat.yMMMd().format(crop.sowingDate!)
-                    : lang.t('Not set'),
-              ),
-              _detailRow(
-                lang.t('Expected Harvest'),
-                crop.expectedHarvestDate != null
-                    ? DateFormat.yMMMd().format(crop.expectedHarvestDate!)
-                    : lang.t('Not set'),
-              ),
-
-              const Divider(height: 32),
-
-              if (crop.notes != null && crop.notes!.isNotEmpty) ...[
-                Text(
-                  lang.t('Notes'),
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(crop.notes!, style: const TextStyle(height: 1.4)),
-                const SizedBox(height: 16),
-              ],
-
-              Text(
-                lang.t('System Details'),
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                  color: Colors.grey,
-                ),
-              ),
-              const SizedBox(height: 8),
-              _detailRow(
-                lang.t('Created'),
-                crop.createdAt != null
-                    ? DateFormat.yMMMd().add_jm().format(crop.createdAt!)
-                    : lang.t('Unknown'),
-                isGrey: true,
-              ),
-              _detailRow(
-                lang.t('Updated'),
-                crop.updatedAt != null
-                    ? DateFormat.yMMMd().add_jm().format(crop.updatedAt!)
-                    : lang.t('Unknown'),
-                isGrey: true,
-              ),
-
-              const SizedBox(height: 40),
-            ],
-          ),
-        ),
-      ),
+  void _showCropDetails(BuildContext context, Crop crop, LanguageProvider lang) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => CropDetailScreen(crop: crop)),
     );
   }
 
-  Widget _detailRow(String label, String value, {bool isGrey = false}) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 140,
-            child: Text(
-              label,
-              style: TextStyle(
-                color: Colors.grey.shade600,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-          Expanded(
-            child: Text(
-              value,
-              style: TextStyle(
-                fontWeight: FontWeight.w500,
-                color: isGrey ? Colors.grey.shade600 : Colors.black87,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
   void _confirmDelete(
     BuildContext context,

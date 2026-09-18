@@ -130,6 +130,67 @@ class Crop {
   }
 }
 
+class Harvest {
+  final String id;
+  final String cropId;
+  final String userId;
+  final DateTime harvestDate;
+  final double quantity;
+  final String quantityUnit;
+  final String? quality;
+  final String? notes;
+  final DateTime? createdAt;
+
+  Harvest({
+    required this.id,
+    required this.cropId,
+    required this.userId,
+    required this.harvestDate,
+    required this.quantity,
+    this.quantityUnit = 'kg',
+    this.quality,
+    this.notes,
+    this.createdAt,
+  });
+
+  Map<String, dynamic> toInsertMap() {
+    return {
+      'crop_id': cropId,
+      'user_id': userId,
+      'harvest_date': harvestDate.toIso8601String(),
+      'quantity': quantity,
+      'quantity_unit': quantityUnit,
+      'quality': quality,
+      'notes': notes,
+    };
+  }
+
+  factory Harvest.fromMap(Map<String, dynamic> map) {
+    DateTime parseDate(dynamic val) {
+      if (val is String && val.isNotEmpty) {
+        return DateTime.tryParse(val) ?? DateTime.now();
+      }
+      return DateTime.now();
+    }
+
+    return Harvest(
+      id: map['id']?.toString() ?? '',
+      cropId: map['crop_id']?.toString() ?? '',
+      userId: map['user_id']?.toString() ?? '',
+      harvestDate: parseDate(map['harvest_date']),
+      quantity: map['quantity'] != null
+          ? (map['quantity'] as num).toDouble()
+          : 0.0,
+      quantityUnit: map['quantity_unit']?.toString() ?? 'kg',
+      quality: map['quality']?.toString(),
+      notes: map['notes']?.toString(),
+      createdAt: map['created_at'] != null
+          ? DateTime.tryParse(map['created_at'].toString())
+          : null,
+    );
+  }
+}
+
 class CropDao {
   final LocalDatabase _db = LocalDatabase.instance;
 
