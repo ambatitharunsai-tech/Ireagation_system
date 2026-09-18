@@ -98,4 +98,18 @@ class FarmRepository {
   Future<void> deleteHarvest(String harvestId) async {
     await _supabase.from('harvests').delete().eq('id', harvestId);
   }
+
+  // --- Stage History ---
+  Future<List<CropStageHistory>> getStageHistory(String cropId) async {
+    try {
+      final data = await _supabase
+          .from('crop_stage_history')
+          .select()
+          .eq('crop_id', cropId)
+          .order('changed_at', ascending: true);
+      return data.map((json) => CropStageHistory.fromMap(json)).toList();
+    } catch (e) {
+      return [];
+    }
+  }
 }

@@ -223,4 +223,12 @@ class FarmProvider extends ChangeNotifier {
       return [];
     }
   }
+  Future<List<CropStageHistory>> getStageHistory(String cropId) async {
+    try {
+      return await _repo.getStageHistory(cropId);
+    } catch (e) {
+      debugPrint('FarmProvider.getStageHistory error: $e');
+      return [];
+    }
+  }
 }

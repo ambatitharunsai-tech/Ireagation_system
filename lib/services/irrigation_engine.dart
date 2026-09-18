@@ -1,5 +1,7 @@
 import '../models/iot_models.dart';
+import '../models/crop_profile.dart';
 import '../services/weather_service.dart';
+import '../database/daos/crop_dao.dart';
 
 class IrrigationDecision {
   final bool shouldIrrigate;
@@ -13,14 +15,15 @@ class IrrigationEngine {
   IrrigationDecision evaluate({
     required List<IoTDevice> devices,
     required WeatherData? weather,
-    required double moistureThreshold,
     required bool isAutoMode,
+    Crop? crop,
   }) {
+    // 1. Core Safety Rules
     if (!isAutoMode) return IrrigationDecision(false, 'Auto mode disabled', 0);
 
-    final moistureSensors = devices.where((d) => d.deviceType.contains('moisture'));
+    final moistureSensors = devices.where((d) => d.deviceType.contains('moisture') && d.isOnline);
     if (moistureSensors.isEmpty) {
-      return IrrigationDecision(false, 'No sensors', 0);
+      return IrrigationDecision(false, 'No active moisture sensors', 0);
     }
 
     final readings = moistureSensors
@@ -28,27 +31,46 @@ class IrrigationEngine {
         .map((d) => d.latestTelemetry!.soilMoisture!)
         .toList();
     if (readings.isEmpty) {
-      return IrrigationDecision(false, 'No valid readings', 0);
+      return IrrigationDecision(false, 'No valid, fresh readings', 0);
     }
 
+    // 2. Weather Safety
+    if (weather != null && (weather.precipitationProbability ?? 0) > 70) {
+      return IrrigationDecision(false, 'High rain forecast, suppressing irrigation', 0);
+    }
+
+    // 3. Extensible Rule Architecture (Crop-aware)
     final avgMoisture = readings.reduce((a, b) => a + b) / readings.length;
+    double threshold = 40.0; // Fallback default
+    int maxDuration = 20;
 
-    // Safety Engine
-    if (weather != null && (weather.precipitationProbability ?? 0) > 60) {
-      return IrrigationDecision(false, 'High rain probability', 0);
+    if (crop != null) {
+      final profile = defaultCropProfiles[crop.variety ?? crop.name] ?? defaultCropProfiles[crop.name];
+      if (profile != null) {
+        threshold = profile.optimalMoistureMin;
+        // Increase requirement during flowering
+        if (crop.growthStage == 'Flowering' || crop.growthStage == 'Fruiting') {
+          threshold += 10.0;
+        }
+        // Decrease requirement nearing harvest
+        if (crop.growthStage == 'Maturity' || crop.growthStage == 'Harvest Ready') {
+          threshold -= 10.0;
+        }
+      }
     }
 
-    if (avgMoisture < moistureThreshold) {
+    // 4. Decision
+    if (avgMoisture < threshold) {
       return IrrigationDecision(
         true,
-        'Moisture below threshold ($avgMoisture < $moistureThreshold)',
-        20,
+        'Moisture ($avgMoisture%) is below dynamic threshold ($threshold%) for ${crop?.name ?? 'crop'}',
+        maxDuration,
       );
     }
 
     return IrrigationDecision(
       false,
-      'Moisture levels adequate ($avgMoisture)',
+      'Moisture levels adequate ($avgMoisture%)',
       0,
     );
   }

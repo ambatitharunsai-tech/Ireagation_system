@@ -16,7 +16,6 @@ void main() {
       final decision = engine.evaluate(
         devices: sensors,
         weather: null,
-        moistureThreshold: 30.0,
         isAutoMode: true,
       );
 
@@ -42,12 +41,11 @@ void main() {
       final decision = engine.evaluate(
         devices: sensors,
         weather: mockWeather,
-        moistureThreshold: 30.0,
         isAutoMode: true,
       );
 
       expect(decision.shouldIrrigate, false);
-      expect(decision.reason, 'High rain probability');
+      expect(decision.reason, 'High rain forecast, suppressing irrigation');
     });
   });
 }

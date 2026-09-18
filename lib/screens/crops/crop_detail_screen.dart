@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 
 import '../../providers/farm_provider.dart';
+import '../../providers/iot_provider.dart';
+import '../../providers/weather_provider.dart';
 import '../../providers/language_provider.dart';
 import '../../database/daos/crop_dao.dart';
 import '../../widgets/add_crop_dialog.dart';
@@ -17,13 +19,30 @@ class CropDetailScreen extends StatefulWidget {
 }
 
 class _CropDetailScreenState extends State<CropDetailScreen> {
+
   bool _isLoadingHarvests = true;
   List<Harvest> _harvests = [];
+  bool _isLoadingHistory = true;
+  List<CropStageHistory> _history = [];
+
 
   @override
   void initState() {
     super.initState();
     _loadHarvests();
+    _loadHistory();
+  }
+
+
+  Future<void> _loadHistory() async {
+    final farm = Provider.of<FarmProvider>(context, listen: false);
+    final results = await farm.getStageHistory(widget.crop.id);
+    if (mounted) {
+      setState(() {
+        _history = results;
+        _isLoadingHistory = false;
+      });
+    }
   }
 
   Future<void> _loadHarvests() async {
@@ -48,7 +67,7 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
     if (crop.status == 'Harvested') statusColor = Colors.orange;
 
     return DefaultTabController(
-      length: 3,
+      length: 5,
       child: Scaffold(
         appBar: AppBar(
           title: Text(crop.name),
@@ -66,6 +85,8 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
               Tab(text: lang.t('Overview')),
               Tab(text: lang.t('Timeline')),
               Tab(text: lang.t('Harvests')),
+              Tab(text: lang.t('Sensors')),
+              Tab(text: lang.t('Weather')),
             ],
           ),
         ),
@@ -74,6 +95,8 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
             _buildOverviewTab(lang, crop, statusColor),
             _buildTimelineTab(lang, crop),
             _buildHarvestsTab(lang, crop),
+            _buildSensorsTab(lang, crop),
+            _buildWeatherTab(lang, crop),
           ],
         ),
       ),
@@ -264,41 +287,35 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
   }
 
   Widget _buildTimelineTab(LanguageProvider lang, Crop crop) {
+    if (_isLoadingHistory) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    
+    if (_history.isNotEmpty) {
+      return ListView.builder(
+        padding: const EdgeInsets.all(24),
+        itemCount: _history.length,
+        itemBuilder: (ctx, i) {
+          final h = _history[i];
+          return _timelineNode(lang, h.newStage, h.changedAt, true, isLast: i == _history.length - 1);
+        },
+      );
+    }
+
     if (crop.sowingDate == null) {
       return Center(child: Text(lang.t('Stage history unavailable')));
     }
-
+    
     return ListView(
       padding: const EdgeInsets.all(24),
       children: [
         _timelineNode(lang, 'Planting', crop.sowingDate, true),
-        _timelineNode(
-          lang,
-          'Seedling',
-          crop.sowingDate?.add(const Duration(days: 14)),
-          crop.growthStage == 'Seedling' || crop.growthStage != null,
-        ),
-        _timelineNode(
-          lang,
-          'Vegetative',
-          null,
-          crop.growthStage == 'Vegetative',
-        ),
+        _timelineNode(lang, 'Seedling', crop.sowingDate?.add(const Duration(days: 14)), crop.growthStage == 'Seedling' || crop.growthStage != null),
+        _timelineNode(lang, 'Vegetative', null, crop.growthStage == 'Vegetative'),
         _timelineNode(lang, 'Flowering', null, crop.growthStage == 'Flowering'),
         _timelineNode(lang, 'Fruiting', null, crop.growthStage == 'Fruiting'),
-        _timelineNode(
-          lang,
-          'Maturity',
-          crop.expectedHarvestDate,
-          crop.growthStage == 'Harvest Ready',
-        ),
-        _timelineNode(
-          lang,
-          'Harvested',
-          crop.status == 'Harvested' ? DateTime.now() : null,
-          crop.status == 'Harvested',
-          isLast: true,
-        ),
+        _timelineNode(lang, 'Maturity', crop.expectedHarvestDate, crop.growthStage == 'Harvest Ready'),
+        _timelineNode(lang, 'Harvested', crop.status == 'Harvested' ? DateTime.now() : null, crop.status == 'Harvested', isLast: true),
       ],
     );
   }
@@ -460,4 +477,66 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
       ],
     );
   }
+
+  Widget _buildSensorsTab(LanguageProvider lang, Crop crop) {
+    final iot = Provider.of<IoTProvider>(context);
+    final devices = iot.devices.where((d) => d.deviceType.contains('moisture') || d.deviceType.contains('temp')).toList();
+    
+    if (devices.isEmpty) {
+      return Center(child: Text(lang.t('No sensor data available.')));
+    }
+    
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: devices.length,
+      itemBuilder: (ctx, i) {
+        final d = devices[i];
+        return Card(
+          child: ListTile(
+            leading: Icon(d.deviceType.contains('moisture') ? Icons.water_drop : Icons.thermostat),
+            title: Text(d.name),
+            subtitle: Text(d.isOnline ? 'LIVE' : 'OFFLINE'),
+            trailing: Text(
+              d.latestTelemetry != null ? '${d.latestTelemetry!.soilMoisture ?? d.latestTelemetry!.temperature ?? '0.0'}' : 'UNAVAILABLE',
+              style: TextStyle(fontWeight: FontWeight.bold, color: d.isOnline ? Colors.green : Colors.grey),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildWeatherTab(LanguageProvider lang, Crop crop) {
+    final weather = Provider.of<WeatherProvider>(context);
+    final current = weather.currentWeather;
+    
+    if (current == null) {
+      return Center(child: Text(lang.t('Weather unavailable')));
+    }
+    
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          ListTile(
+            leading: const Icon(Icons.thermostat, color: Colors.orange),
+            title: Text('${current.temperature}°C'),
+            subtitle: Text(current.condition),
+          ),
+          ListTile(
+            leading: const Icon(Icons.water_drop, color: Colors.blue),
+            title: Text('${current.humidity}%'),
+            subtitle: Text(lang.t('Humidity')),
+          ),
+          ListTile(
+            leading: const Icon(Icons.air, color: Colors.grey),
+            title: Text('${current.windSpeed} km/h'),
+            subtitle: Text(lang.t('Wind Speed')),
+          ),
+        ],
+      ),
+    );
+  }
+
 }
