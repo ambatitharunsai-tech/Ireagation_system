@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../providers/farm_provider.dart';
-import '../../providers/auth_provider.dart';
 import '../../database/daos/crop_dao.dart';
 import '../../widgets/add_crop_dialog.dart';
 

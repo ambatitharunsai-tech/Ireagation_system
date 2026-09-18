@@ -1,7 +1,4 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:flutter/foundation.dart';
-
-import '../config/supabase_config.dart';
 
 class AppUser {
   final String id;

@@ -19,15 +19,17 @@ class IrrigationEngine {
     if (!isAutoMode) return IrrigationDecision(false, 'Auto mode disabled', 0);
 
     final moistureSensors = devices.where((d) => d.type.contains('moisture'));
-    if (moistureSensors.isEmpty)
+    if (moistureSensors.isEmpty) {
       return IrrigationDecision(false, 'No sensors', 0);
+    }
 
     final readings = moistureSensors
         .where((d) => d.lastReading != null)
         .map((d) => d.lastReading!)
         .toList();
-    if (readings.isEmpty)
+    if (readings.isEmpty) {
       return IrrigationDecision(false, 'No valid readings', 0);
+    }
 
     final avgMoisture = readings.reduce((a, b) => a + b) / readings.length;
 

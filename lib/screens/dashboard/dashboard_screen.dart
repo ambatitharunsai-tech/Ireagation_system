@@ -21,7 +21,6 @@ class DashboardScreen extends StatefulWidget {
 class _DashboardScreenState extends State<DashboardScreen> {
   final WeatherService _weatherService = WeatherService();
   WeatherData? _weather;
-  List<DailyForecast> _forecast = [];
   bool _loadingWeather = true;
   String _locationName = "Detecting...";
 
@@ -60,14 +59,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
       debugPrint('Location error: $e');
     }
 
-    final results = await Future.wait([
-      _weatherService.fetchWeather(lat: lat, lon: lon),
-      _weatherService.fetchForecast(lat: lat, lon: lon),
-    ]);
+    final weather = await _weatherService.fetchWeather(lat: lat, lon: lon);
     if (mounted) {
       setState(() {
-        _weather = results[0] as WeatherData?;
-        _forecast = results[1] as List<DailyForecast>;
+        _weather = weather;
         _locationName = locName;
         _loadingWeather = false;
       });

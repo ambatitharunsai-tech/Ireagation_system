@@ -3,8 +3,6 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 
 import '../../providers/finance_provider.dart';
-import '../../providers/auth_provider.dart';
-import '../../database/daos/finance_dao.dart';
 import '../../widgets/add_finance_dialog.dart';
 import 'order_fertilizer_screen.dart';
 
@@ -343,12 +341,15 @@ class FinanceScreen extends StatelessWidget {
     if (lower.contains('seed')) return Icons.spa;
     if (lower.contains('fertilizer')) return Icons.science;
     if (lower.contains('labor') || lower.contains('wage')) return Icons.people;
-    if (lower.contains('equipment') || lower.contains('machine'))
+    if (lower.contains('equipment') || lower.contains('machine')) {
       return Icons.agriculture;
-    if (lower.contains('fuel') || lower.contains('diesel'))
+    }
+    if (lower.contains('fuel') || lower.contains('diesel')) {
       return Icons.local_gas_station;
-    if (lower.contains('water') || lower.contains('irrigation'))
+    }
+    if (lower.contains('water') || lower.contains('irrigation')) {
       return Icons.water_drop;
+    }
     return Icons.receipt;
   }
 

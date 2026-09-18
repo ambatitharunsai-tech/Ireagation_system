@@ -3,11 +3,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../services/iot_service.dart';
-import '../services/gemini_ai_service.dart';
-import '../services/weather_service.dart';
-import '../database/daos/crop_dao.dart';
-import '../database/daos/task_dao.dart';
-import '../database/daos/finance_dao.dart';
 
 class IoTAlert {
   final String id;
@@ -37,7 +32,6 @@ class SensorReading {
 
 class IoTProvider extends ChangeNotifier {
   final IoTService _iotService = IoTService();
-  final GeminiAIService _geminiService = GeminiAIService();
 
   final List<IoTAlert> _alerts = [];
   bool _autoIrrigation = true;

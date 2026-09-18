@@ -102,10 +102,12 @@ class IoTService {
 
       if (topic.endsWith('/telemetry')) {
         device.isOnline = true;
-        if (data.containsKey('soil_moisture'))
+        if (data.containsKey('soil_moisture')) {
           device.lastReading = (data['soil_moisture'] as num).toDouble();
-        if (data.containsKey('temperature'))
+        }
+        if (data.containsKey('temperature')) {
           device.lastReading = (data['temperature'] as num).toDouble();
+        }
         // UI should listen or we should use callbacks
       } else if (topic.endsWith('/status')) {
         device.isOnline = data['is_online'] ?? false;
