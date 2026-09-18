@@ -140,7 +140,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 }
               },
               child: ListView(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
                 children: [
                   if (farm.error != null)
                     _buildErrorBanner(farm.error!, () => farm.clearError()),
@@ -191,9 +194,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       Text(
                         '${farm.crops.length} total',
                         style: TextStyle(
-                            color: Colors.grey.shade600,
-                            fontWeight: FontWeight.w600,
-                            fontSize: 13),
+                          color: Colors.grey.shade600,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 13,
+                        ),
                       ),
                     ],
                   ),
@@ -214,9 +218,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       Text(
                         '${farm.pendingTaskCount} pending',
                         style: TextStyle(
-                            color: Colors.grey.shade600,
-                            fontWeight: FontWeight.w600,
-                            fontSize: 13),
+                          color: Colors.grey.shade600,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 13,
+                        ),
                       ),
                     ],
                   ),
@@ -246,9 +251,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
             child: Text(
               message,
               style: TextStyle(
-                  color: Colors.red.shade900,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w500),
+                color: Colors.red.shade900,
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ),
           IconButton(
@@ -294,7 +300,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
               SizedBox(width: 12),
               Text(
                 'Weather data unavailable',
-                style: TextStyle(color: Colors.grey, fontWeight: FontWeight.w600),
+                style: TextStyle(
+                  color: Colors.grey,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ],
           ),
@@ -342,7 +351,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
               Row(
                 children: [
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(20),
@@ -515,7 +527,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           progress: (finance.totalRevenue + finance.totalExpenses) == 0
               ? 0
               : finance.totalRevenue /
-                  (finance.totalRevenue + finance.totalExpenses),
+                    (finance.totalRevenue + finance.totalExpenses),
         ),
       ],
     );
@@ -703,7 +715,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
               Text(
                 'No crops added yet',
                 style: TextStyle(
-                    color: Colors.grey.shade500, fontWeight: FontWeight.w600),
+                  color: Colors.grey.shade500,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ],
           ),
@@ -729,7 +743,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
             border: Border.all(color: Colors.grey.shade100),
           ),
           child: ListTile(
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 8,
+            ),
             leading: CircleAvatar(
               radius: 24,
               backgroundColor: crop.status == 'Active'
@@ -752,9 +769,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   Text(
                     '${crop.growthStage ?? "Unknown stage"} • ${crop.area ?? 0} acres',
                     style: TextStyle(
-                        fontSize: 13,
-                        color: Colors.grey.shade600,
-                        fontWeight: FontWeight.w500),
+                      fontSize: 13,
+                      color: Colors.grey.shade600,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
                   if (crop.notes != null && crop.notes!.isNotEmpty) ...[
                     const SizedBox(height: 6),
@@ -796,7 +814,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildTasksList(FarmProvider farm) {
-    final pending = farm.tasks.where((t) => t.status == 'Pending').take(3).toList();
+    final pending = farm.tasks
+        .where((t) => t.status == 'Pending')
+        .take(3)
+        .toList();
 
     if (pending.isEmpty) {
       return Container(
@@ -814,7 +835,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
               Text(
                 'All caught up!',
                 style: TextStyle(
-                    color: Colors.grey.shade500, fontWeight: FontWeight.w600),
+                  color: Colors.grey.shade500,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ],
           ),
@@ -827,8 +850,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
         final priorityColor = task.priority == 'High'
             ? Colors.red
             : task.priority == 'Medium'
-                ? Colors.orange
-                : Colors.green;
+            ? Colors.orange
+            : Colors.green;
 
         return Container(
           margin: const EdgeInsets.only(bottom: 12),
@@ -845,7 +868,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
             border: Border.all(color: Colors.grey.shade100),
           ),
           child: ListTile(
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 8,
+            ),
             leading: CircleAvatar(
               radius: 24,
               backgroundColor: priorityColor.withValues(alpha: 0.1),
@@ -860,9 +886,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
               child: Text(
                 task.date,
                 style: TextStyle(
-                    fontSize: 13,
-                    color: Colors.grey.shade500,
-                    fontWeight: FontWeight.w500),
+                  fontSize: 13,
+                  color: Colors.grey.shade500,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
             ),
             trailing: Container(
@@ -900,7 +927,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
           child: Text(
             'No sensors connected',
             style: TextStyle(
-                color: Colors.grey.shade500, fontWeight: FontWeight.w600),
+              color: Colors.grey.shade500,
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ),
       );
@@ -924,8 +953,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
               color = reading < 30
                   ? Colors.red
                   : reading < 50
-                      ? Colors.orange
-                      : Colors.blue;
+                  ? Colors.orange
+                  : Colors.blue;
               break;
             case 'temp_sensor':
               icon = Icons.thermostat;
@@ -967,9 +996,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 Text(
                   s.name.split(' - ').last,
                   style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey.shade700,
-                      fontWeight: FontWeight.w600),
+                    fontSize: 12,
+                    color: Colors.grey.shade700,
+                    fontWeight: FontWeight.w600,
+                  ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),

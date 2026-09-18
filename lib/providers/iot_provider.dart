@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../services/iot_service.dart';
@@ -49,14 +50,21 @@ class IoTProvider extends ChangeNotifier {
   bool get autoIrrigation => _autoIrrigation;
   double get moistureThreshold => _moistureThreshold;
 
-  List<IoTDevice> get sensors => _iotService.devices.where((d) => d.type.contains('sensor')).toList();
-  List<IoTDevice> get actuators => _iotService.devices.where((d) => d.type == 'pump' || d.type == 'valve').toList();
+  List<IoTDevice> get sensors =>
+      _iotService.devices.where((d) => d.type.contains('sensor')).toList();
+  List<IoTDevice> get actuators => _iotService.devices
+      .where((d) => d.type == 'pump' || d.type == 'valve')
+      .toList();
   int get onlineCount => _iotService.devices.where((d) => d.isOnline).length;
 
   Future<void> connect(String farmId) async {
     // In production, broker URL and credentials come from secure config
-    await _iotService.connectMqtt('test.mosquitto.org', 'ireagation_app_${DateTime.now().millisecondsSinceEpoch}', farmId);
-    
+    await _iotService.connectMqtt(
+      'test.mosquitto.org',
+      'ireagation_app_${DateTime.now().millisecondsSinceEpoch}',
+      farmId,
+    );
+
     // Polling UI since mqtt updates aren't directly linked to provider yet
     _pollingTimer = Timer.periodic(const Duration(seconds: 2), (_) {
       notifyListeners();
@@ -64,7 +72,10 @@ class IoTProvider extends ChangeNotifier {
   }
 
   void toggleDevice(String deviceId) {
-    final device = _iotService.devices.firstWhere((d) => d.id == deviceId, orElse: () => IoTDevice(id: '', name: '', type: ''));
+    final device = _iotService.devices.firstWhere(
+      (d) => d.id == deviceId,
+      orElse: () => IoTDevice(id: '', name: '', type: ''),
+    );
     if (device.id.isNotEmpty) {
       final cmd = device.isActive ? 'PUMP_OFF' : 'PUMP_ON';
       _iotService.sendCommand(deviceId, cmd, 'flutter_app');
@@ -85,7 +96,17 @@ class IoTProvider extends ChangeNotifier {
   }
 
   void markAlertRead(String alertId) {
-    final alert = _alerts.firstWhere((a) => a.id == alertId, orElse: () => IoTAlert(id: '', deviceId: '', deviceName: '', message: '', severity: '', timestamp: DateTime.now()));
+    final alert = _alerts.firstWhere(
+      (a) => a.id == alertId,
+      orElse: () => IoTAlert(
+        id: '',
+        deviceId: '',
+        deviceName: '',
+        message: '',
+        severity: '',
+        timestamp: DateTime.now(),
+      ),
+    );
     if (alert.id.isNotEmpty) {
       alert.isRead = true;
       notifyListeners();
@@ -109,12 +130,12 @@ class IoTProvider extends ChangeNotifier {
   }
 
   // AI Agent stubs for UI compatibility
-  bool get isAiAgentActive => _autoIrrigation; 
+  bool get isAiAgentActive => _autoIrrigation;
   String get lastAiRecommendation => 'Handled by local rule engine safely.';
   List<dynamic> get aiLogs => [];
-  
+
   // Dummy getter for aiAgent to satisfy UI
-  dynamic get aiAgent => null; 
+  dynamic get aiAgent => null;
 
   void toggleAiAgent() {
     setAutoIrrigation(!_autoIrrigation);

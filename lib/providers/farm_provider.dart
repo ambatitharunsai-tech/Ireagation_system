@@ -30,21 +30,24 @@ class FarmProvider extends ChangeNotifier {
     try {
       _crops = await _repo.getCropsByUser(userId);
       _tasks = await _repo.getTasksByUser(userId);
-      
+
       // Update Cache
       await _cache.saveFarmData(userId, {
         'crops': _crops.map((c) => c.toMap()).toList(),
         'tasks': _tasks.map((t) => t.toMap()).toList(),
       });
     } catch (e) {
-      _error = 'Could not load farm data from server. Attempting offline cache...';
+      _error =
+          'Could not load farm data from server. Attempting offline cache...';
       debugPrint('FarmProvider.loadData error: $e');
-      
+
       // Fallback to cache
       final cached = await _cache.getFarmData(userId);
       if (cached != null) {
         _crops = (cached['crops'] as List).map((c) => Crop.fromMap(c)).toList();
-        _tasks = (cached['tasks'] as List).map((t) => FarmTask.fromMap(t)).toList();
+        _tasks = (cached['tasks'] as List)
+            .map((t) => FarmTask.fromMap(t))
+            .toList();
       } else {
         _error = 'No offline data available. Please check connection.';
       }

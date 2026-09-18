@@ -16,7 +16,7 @@ class AuthProvider extends ChangeNotifier {
   AuthProvider() {
     _restoreSession();
   }
-  
+
   Future<void> _restoreSession() async {
     try {
       final user = await AuthService().getCurrentUser();
@@ -67,7 +67,8 @@ class AuthProvider extends ChangeNotifier {
       return true;
     } catch (e) {
       debugPrint('AuthProvider.register error: $e');
-      _error = 'Registration failed. Check your connection or use another email.';
+      _error =
+          'Registration failed. Check your connection or use another email.';
     }
 
     _isLoading = false;

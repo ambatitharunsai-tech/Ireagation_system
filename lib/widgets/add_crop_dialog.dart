@@ -106,7 +106,10 @@ class _AddCropDialogState extends State<AddCropDialog> {
         FilledButton(
           onPressed: () async {
             if (_nameCtrl.text.trim().isEmpty) return;
-            final user = Provider.of<AuthProvider>(context, listen: false).currentUser!;
+            final user = Provider.of<AuthProvider>(
+              context,
+              listen: false,
+            ).currentUser!;
             final farm = Provider.of<FarmProvider>(context, listen: false);
             final messenger = ScaffoldMessenger.of(context);
             final nav = Navigator.of(context);
@@ -114,21 +117,25 @@ class _AddCropDialogState extends State<AddCropDialog> {
 
             final success = await farm.addCrop(
               Crop(
-                id: '', 
+                id: '',
                 userId: user.id,
                 name: name,
                 area: double.tryParse(_areaCtrl.text),
                 growthStage: _growthStage,
                 irrigationMethod: _irrigationMethod,
                 sowingDate: DateTime.now().toIso8601String(),
-                notes: _notesCtrl.text.trim().isNotEmpty ? _notesCtrl.text.trim() : null,
+                notes: _notesCtrl.text.trim().isNotEmpty
+                    ? _notesCtrl.text.trim()
+                    : null,
               ),
             );
 
             if (mounted) {
               nav.pop();
               if (success) {
-                messenger.showSnackBar(SnackBar(content: Text('$name added successfully!')));
+                messenger.showSnackBar(
+                  SnackBar(content: Text('$name added successfully!')),
+                );
               }
             }
           },

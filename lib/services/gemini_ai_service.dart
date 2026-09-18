@@ -21,30 +21,35 @@ class GeminiAIService {
   }) async {
     try {
       final context = {
-        'devices': devices.map((d) => {
-          'name': d.name,
-          'type': d.type,
-          'lastReading': d.lastReading,
-          'isOnline': d.isOnline,
-        }).toList(),
+        'devices': devices
+            .map(
+              (d) => {
+                'name': d.name,
+                'type': d.type,
+                'lastReading': d.lastReading,
+                'isOnline': d.isOnline,
+              },
+            )
+            .toList(),
         'crops': crops?.map((c) => c.name).toList() ?? [],
-        'weather': weather != null ? {
-          'temperature': weather.temperature,
-          'rainProbability': weather.precipitationProbability,
-        } : null,
+        'weather': weather != null
+            ? {
+                'temperature': weather.temperature,
+                'rainProbability': weather.precipitationProbability,
+              }
+            : null,
       };
 
       final response = await _supabase.functions.invoke(
         'gemini-advisor',
-        body: {
-          'query': query,
-          'context': context,
-        },
+        body: {'query': query, 'context': context},
       );
 
       if (response.status == 200) {
         final data = response.data;
-        if (data != null && data['candidates'] != null && data['candidates'].isNotEmpty) {
+        if (data != null &&
+            data['candidates'] != null &&
+            data['candidates'].isNotEmpty) {
           return data['candidates'][0]['content']['parts'][0]['text'];
         }
       }

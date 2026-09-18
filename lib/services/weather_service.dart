@@ -1,4 +1,5 @@
 import 'dart:convert';
+
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -40,7 +41,8 @@ class WeatherData {
     temperature: json['temperature']?.toDouble() ?? 0.0,
     humidity: json['humidity']?.toDouble() ?? 0.0,
     windSpeed: json['windSpeed']?.toDouble() ?? 0.0,
-    precipitationProbability: json['precipitationProbability']?.toDouble() ?? 0.0,
+    precipitationProbability:
+        json['precipitationProbability']?.toDouble() ?? 0.0,
     weatherCode: json['weatherCode'] ?? 0,
   );
 }
@@ -92,12 +94,13 @@ class WeatherService {
     double lon = 77.59,
   }) async {
     final prefs = await SharedPreferences.getInstance();
-    
+
     // Check cache
     final cacheTime = prefs.getString(_cacheTimeKey);
     if (cacheTime != null) {
       final lastFetch = DateTime.parse(cacheTime);
-      if (DateTime.now().difference(lastFetch).inMinutes < _cacheDurationMinutes) {
+      if (DateTime.now().difference(lastFetch).inMinutes <
+          _cacheDurationMinutes) {
         final cachedData = prefs.getString(_cacheKey);
         if (cachedData != null) {
           return WeatherData.fromJson(json.decode(cachedData));
@@ -120,7 +123,8 @@ class WeatherService {
         final weather = WeatherData(
           temperature: (current['temperature_2m'] ?? 0).toDouble(),
           humidity: (current['relative_humidity_2m'] ?? 0).toDouble(),
-          precipitationProbability: (current['precipitation_probability'] ?? 0).toDouble(),
+          precipitationProbability: (current['precipitation_probability'] ?? 0)
+              .toDouble(),
           weatherCode: current['weather_code'] ?? 0,
           windSpeed: (current['wind_speed_10m'] ?? 0).toDouble(),
         );

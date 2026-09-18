@@ -1,4 +1,5 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+
 import '../../database/daos/crop_dao.dart';
 import '../../database/daos/task_dao.dart';
 
@@ -6,12 +7,20 @@ class FarmRepository {
   final SupabaseClient _supabase = Supabase.instance.client;
 
   Future<List<Crop>> getCropsByUser(String userId) async {
-    final data = await _supabase.from('crops').select().eq('user_id', userId).order('created_at', ascending: false);
+    final data = await _supabase
+        .from('crops')
+        .select()
+        .eq('user_id', userId)
+        .order('created_at', ascending: false);
     return data.map((json) => Crop.fromMap(json)).toList();
   }
 
   Future<Crop> insertCrop(Crop crop) async {
-    final data = await _supabase.from('crops').insert(crop.toInsertMap()).select().single();
+    final data = await _supabase
+        .from('crops')
+        .insert(crop.toInsertMap())
+        .select()
+        .single();
     return Crop.fromMap(data);
   }
 
@@ -24,12 +33,20 @@ class FarmRepository {
   }
 
   Future<List<FarmTask>> getTasksByUser(String userId) async {
-    final data = await _supabase.from('tasks').select().eq('user_id', userId).order('created_at', ascending: false);
+    final data = await _supabase
+        .from('tasks')
+        .select()
+        .eq('user_id', userId)
+        .order('created_at', ascending: false);
     return data.map((json) => FarmTask.fromMap(json)).toList();
   }
 
   Future<FarmTask> insertTask(FarmTask task) async {
-    final data = await _supabase.from('tasks').insert(task.toInsertMap()).select().single();
+    final data = await _supabase
+        .from('tasks')
+        .insert(task.toInsertMap())
+        .select()
+        .single();
     return FarmTask.fromMap(data);
   }
 

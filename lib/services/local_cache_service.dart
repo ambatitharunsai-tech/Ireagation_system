@@ -1,4 +1,5 @@
 import 'dart:convert';
+
 import 'package:shared_preferences/shared_preferences.dart';
 
 class LocalCacheService {
@@ -7,7 +8,7 @@ class LocalCacheService {
 
   Future<void> saveFarmData(String userId, Map<String, dynamic> data) async {
     final prefs = await SharedPreferences.getInstance();
-    final cache = prefs.getString(_farmDataKey) != null 
+    final cache = prefs.getString(_farmDataKey) != null
         ? json.decode(prefs.getString(_farmDataKey)!) as Map<String, dynamic>
         : {};
     cache[userId] = data;
@@ -24,7 +25,7 @@ class LocalCacheService {
 
   Future<void> saveFinanceData(String userId, Map<String, dynamic> data) async {
     final prefs = await SharedPreferences.getInstance();
-    final cache = prefs.getString(_financeDataKey) != null 
+    final cache = prefs.getString(_financeDataKey) != null
         ? json.decode(prefs.getString(_financeDataKey)!) as Map<String, dynamic>
         : {};
     cache[userId] = data;

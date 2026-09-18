@@ -76,16 +76,16 @@ class AuthService {
       email: email,
       password: password,
     );
-    
+
     final userId = response.user!.id;
-    
+
     // Create profile
     final profile = AppUser(id: userId, name: name, email: email);
     await _supabase.from('profiles').insert(profile.toMap());
-    
+
     return profile;
   }
-  
+
   Future<AppUser?> getCurrentUser() async {
     final user = _supabase.auth.currentUser;
     if (user != null) {
@@ -95,7 +95,11 @@ class AuthService {
   }
 
   Future<AppUser> _fetchProfile(String userId, String email) async {
-    final data = await _supabase.from('profiles').select().eq('id', userId).single();
+    final data = await _supabase
+        .from('profiles')
+        .select()
+        .eq('id', userId)
+        .single();
     final profile = AppUser.fromMap(data);
     return profile;
   }
