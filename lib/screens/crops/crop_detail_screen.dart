@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 
 import '../../providers/farm_provider.dart';
+import '../../providers/finance_provider.dart';
 import '../../providers/iot_provider.dart';
 import '../../providers/weather_provider.dart';
 import '../../providers/language_provider.dart';
@@ -67,7 +68,7 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
     if (crop.status == 'Harvested') statusColor = Colors.orange;
 
     return DefaultTabController(
-      length: 5,
+      length: 7,
       child: Scaffold(
         appBar: AppBar(
           title: Text(crop.name),
@@ -84,6 +85,8 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
             tabs: [
               Tab(text: lang.t('Overview')),
               Tab(text: lang.t('Timeline')),
+              Tab(text: lang.t('Tasks')),
+              Tab(text: lang.t('Finance')),
               Tab(text: lang.t('Harvests')),
               Tab(text: lang.t('Sensors')),
               Tab(text: lang.t('Weather')),
@@ -94,6 +97,8 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
           children: [
             _buildOverviewTab(lang, crop, statusColor),
             _buildTimelineTab(lang, crop),
+            _buildTasksTab(lang, crop),
+            _buildFinanceTab(lang, crop),
             _buildHarvestsTab(lang, crop),
             _buildSensorsTab(lang, crop),
             _buildWeatherTab(lang, crop),
@@ -536,6 +541,114 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
           ),
         ],
       ),
+    );
+  }
+
+
+  Widget _buildTasksTab(LanguageProvider lang, Crop crop) {
+    final farm = Provider.of<FarmProvider>(context);
+    final cropTasks = farm.tasks.where((t) => t.cropId == crop.id).toList();
+
+    if (cropTasks.isEmpty) {
+      return Center(child: Text(lang.t('No tasks assigned to this crop.')));
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: cropTasks.length,
+      itemBuilder: (ctx, i) {
+        final t = cropTasks[i];
+        final isDone = t.status == 'Completed';
+        return Card(
+          child: ListTile(
+            leading: Icon(
+              isDone ? Icons.check_circle : Icons.radio_button_unchecked,
+              color: isDone ? Colors.green : Colors.orange,
+            ),
+            title: Text(
+              t.title,
+              style: TextStyle(decoration: isDone ? TextDecoration.lineThrough : null),
+            ),
+            subtitle: Text(t.date),
+            trailing: Text(t.priority, style: TextStyle(color: t.priority == 'High' ? Colors.red : Colors.grey)),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildFinanceTab(LanguageProvider lang, Crop crop) {
+    final finance = Provider.of<FinanceProvider>(context);
+    final cropExpenses = finance.expenses.where((e) => e.cropId == crop.id).toList();
+    final cropSales = finance.sales.where((s) => s.cropId == crop.id).toList();
+
+    final totalExpenses = cropExpenses.fold<double>(0, (sum, e) => sum + e.amount);
+    final totalSales = cropSales.fold<double>(0, (sum, s) => sum + (s.quantity * s.price));
+    final netProfit = totalSales - totalExpenses;
+
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        Card(
+          color: netProfit >= 0 ? Colors.green.shade50 : Colors.red.shade50,
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              children: [
+                Text(lang.t('Net Profit'), style: const TextStyle(fontSize: 16)),
+                const SizedBox(height: 8),
+                Text(
+                  '\$${netProfit.toStringAsFixed(2)}',
+                  style: TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                    color: netProfit >= 0 ? Colors.green.shade800 : Colors.red.shade800,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 16),
+        Row(
+          children: [
+            Expanded(
+              child: Card(
+                child: ListTile(
+                  title: Text(lang.t('Sales')),
+                  subtitle: Text('\$${totalSales.toStringAsFixed(2)}', style: const TextStyle(color: Colors.green, fontWeight: FontWeight.bold)),
+                ),
+              ),
+            ),
+            Expanded(
+              child: Card(
+                child: ListTile(
+                  title: Text(lang.t('Expenses')),
+                  subtitle: Text('\$${totalExpenses.toStringAsFixed(2)}', style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        if (cropSales.isNotEmpty) ...[
+          Text(lang.t('Recent Sales'), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+          ...cropSales.take(3).map((s) => ListTile(
+            leading: const Icon(Icons.arrow_upward, color: Colors.green),
+            title: Text('${s.quantity} kg to ${s.buyer ?? 'Unknown'}'),
+            trailing: Text('\$${(s.quantity * s.price).toStringAsFixed(2)}'),
+          )),
+          const Divider(),
+        ],
+        if (cropExpenses.isNotEmpty) ...[
+          Text(lang.t('Recent Expenses'), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+          ...cropExpenses.take(3).map((e) => ListTile(
+            leading: const Icon(Icons.arrow_downward, color: Colors.red),
+            title: Text(e.category),
+            trailing: Text('\$${e.amount.toStringAsFixed(2)}'),
+          )),
+        ],
+      ],
     );
   }
 
