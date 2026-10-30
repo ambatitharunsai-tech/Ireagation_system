@@ -41,7 +41,11 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
 
       if (mounted) {
         if (success) {
-          Navigator.pop(context);
+          if (auth.registrationRequiresEmailConfirmation) {
+            _showEmailConfirmationDialog();
+          } else {
+            Navigator.pop(context);
+          }
         } else if (auth.error != null) {
           final errorMsg = auth.error!;
           auth.clearError();
@@ -49,6 +53,32 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
         }
       }
     }
+  }
+
+  void _showEmailConfirmationDialog() {
+    final lang = Provider.of<LanguageProvider>(context, listen: false);
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        icon: const Icon(Icons.mark_email_read_outlined, color: Color(0xFF2E7D32), size: 48),
+        title: Text(lang.t('Check your email')),
+        content: Text(
+          lang.t(
+            'Your account was created. Confirm your email address before logging in.',
+          ),
+          textAlign: TextAlign.center,
+        ),
+        actions: [
+          FilledButton(
+            onPressed: () {
+              Navigator.pop(dialogContext);
+              Navigator.pop(context);
+            },
+            child: Text(lang.t('Got it')),
+          ),
+        ],
+      ),
+    );
   }
 
   void _showErrorDialog(String message) {
