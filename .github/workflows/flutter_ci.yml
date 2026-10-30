@@ -59,3 +59,37 @@ jobs:
           echo '## Android APK' >> "$GITHUB_STEP_SUMMARY"
           echo "[Download Ireagation System APK](${{ steps.apk-upload.outputs.artifact-url }})" >> "$GITHUB_STEP_SUMMARY"
           echo "SHA-256: $(shasum -a 256 build/app/outputs/flutter-apk/app-release.apk | cut -d ' ' -f 1)" >> "$GITHUB_STEP_SUMMARY"
+
+  publish-release:
+    name: Publish public Android download
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: build
+    runs-on: ubuntu-26.04
+    permissions:
+      actions: read
+      contents: write
+    steps:
+      - name: Download APK artifact
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          mkdir -p dist
+          gh run download "$GITHUB_RUN_ID" --name "Ireagation-System-Android-APK" --dir dist
+
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          TAG="android-v1.0.${GITHUB_RUN_NUMBER}"
+          TITLE="Ireagation System Android v1.0.${GITHUB_RUN_NUMBER}"
+          NOTES="Android testing build for Ireagation System. Install the APK on an Android device. This build uses the repository's current debug signing configuration and is intended for direct testing, not Google Play distribution. If Android reports a signature conflict when updating, uninstall the previous test build first."
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" dist/app-release.apk --clobber
+            gh release edit "$TAG" --title "$TITLE" --notes "$NOTES" --latest
+          else
+            gh release create "$TAG" dist/app-release.apk --target "$GITHUB_SHA" --title "$TITLE" --notes "$NOTES" --latest
+          fi
+          echo '## Public Android download' >> "$GITHUB_STEP_SUMMARY"
+          echo "[Download Ireagation System APK]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/releases/latest/download/app-release.apk)" >> "$GITHUB_STEP_SUMMARY"
