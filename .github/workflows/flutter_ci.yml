@@ -44,7 +44,7 @@ jobs:
             printf '%s\n' "storePassword=$ANDROID_KEYSTORE_PASSWORD"
             printf '%s\n' "keyPassword=$ANDROID_KEY_PASSWORD"
             printf '%s\n' "keyAlias=$ANDROID_KEY_ALIAS"
-            printf '%s\n' "storeFile=app/upload-keystore.jks"
+            printf '%s\n' "storeFile=upload-keystore.jks"
           } > android/key.properties
 
       - name: Format Code
