@@ -32,5 +32,18 @@ A comprehensive Smart Agriculture & Intelligent Irrigation application built wit
 5. Run `flutter pub get`.
 6. Run the app on your preferred emulator or device.
 
+## Download Android app
+
+After the first successful build on the `main` branch, the latest Android testing APK will be available here:
+
+**[Download Ireagation System for Android](https://github.com/ambatitharunsai-tech/Ireagation_system/releases/latest/download/app-release.apk)**
+
+Installation:
+1. Download the APK on your Android phone.
+2. Open the downloaded file and allow your browser or file manager to install unknown apps when Android asks.
+3. Tap **Install**, then open **Ireagation System**.
+
+This is a direct-install testing build, currently signed with the repository's debug signing configuration. It is not a Google Play Store release. If a later build cannot update an older installation because the signing key changed, uninstall the old test build first.
+
 ## CI/CD
-Automated testing and APK generation via GitHub Actions is included.
+Automated tests and Android APK packaging run in GitHub Actions. Pull request builds publish a 30-day APK artifact; successful builds on `main` publish a public GitHub Release.
