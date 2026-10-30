@@ -43,3 +43,19 @@ jobs:
 
       - name: Build APK
         run: flutter build apk --release
+
+      - name: Upload Android APK
+        id: apk-upload
+        uses: actions/upload-artifact@v7
+        with:
+          name: Ireagation-System-Android-APK
+          path: build/app/outputs/flutter-apk/app-release.apk
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Publish APK download link
+        if: success()
+        run: |
+          echo '## Android APK' >> "$GITHUB_STEP_SUMMARY"
+          echo "[Download Ireagation System APK](${{ steps.apk-upload.outputs.artifact-url }})" >> "$GITHUB_STEP_SUMMARY"
+          echo "SHA-256: $(shasum -a 256 build/app/outputs/flutter-apk/app-release.apk | cut -d ' ' -f 1)" >> "$GITHUB_STEP_SUMMARY"
