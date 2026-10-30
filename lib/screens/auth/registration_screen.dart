@@ -57,28 +57,33 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
 
   void _showEmailConfirmationDialog() {
     final lang = Provider.of<LanguageProvider>(context, listen: false);
-    showDialog(
+    showDialog<void>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        icon: const Icon(Icons.mark_email_read_outlined, color: Color(0xFF2E7D32), size: 48),
-        title: Text(lang.t('Check your email')),
+        icon: const Icon(
+          Icons.mark_email_read_outlined,
+          color: Color(0xFF2E7D32),
+          size: 48,
+        ),
+        title: Text(lang.t('Check your inbox')),
         content: Text(
           lang.t(
-            'Your account was created. Confirm your email address before logging in.',
+            'If a new account can be created for this email, you will receive a confirmation link. If you already have an account, return to login.',
           ),
           textAlign: TextAlign.center,
         ),
         actions: [
           FilledButton(
-            onPressed: () {
-              Navigator.pop(dialogContext);
-              Navigator.pop(context);
-            },
-            child: Text(lang.t('Got it')),
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text(lang.t('Back to login')),
           ),
         ],
       ),
-    );
+    ).then((_) {
+      // Return to the login route whether the dialog is closed by its button,
+      // the system back action, or a tap outside the dialog.
+      if (mounted) Navigator.pop(context);
+    });
   }
 
   void _showErrorDialog(String message) {
