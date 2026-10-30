@@ -53,6 +53,10 @@ class SmartAgriApp extends StatefulWidget {
 }
 
 class _SmartAgriAppState extends State<SmartAgriApp> {
+  final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
+  final GlobalKey<ScaffoldMessengerState> _messengerKey =
+      GlobalKey<ScaffoldMessengerState>();
+
   @override
   void initState() {
     super.initState();
@@ -67,10 +71,11 @@ class _SmartAgriAppState extends State<SmartAgriApp> {
     if (!mounted) return;
 
     final update = await AppUpdateService.checkForUpdate();
-    if (!mounted || update == null) return;
+    final navigatorContext = _navigatorKey.currentContext;
+    if (!mounted || update == null || navigatorContext == null) return;
 
     await showDialog<void>(
-      context: context,
+      context: navigatorContext,
       barrierDismissible: false,
       builder: (dialogContext) {
         final releaseNotes = update.releaseNotes.isEmpty
@@ -87,7 +92,7 @@ class _SmartAgriAppState extends State<SmartAgriApp> {
               children: [
                 Text(
                   'Ireagation System ${update.version}',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  style: Theme.of(dialogContext).textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
                 ),
@@ -123,7 +128,7 @@ class _SmartAgriAppState extends State<SmartAgriApp> {
 
                 if (!mounted) return;
                 if (!opened) {
-                  ScaffoldMessenger.of(context).showSnackBar(
+                  _messengerKey.currentState?.showSnackBar(
                     const SnackBar(
                       content: Text(
                         'Could not open the download. Please try again later.',
@@ -133,7 +138,6 @@ class _SmartAgriAppState extends State<SmartAgriApp> {
                   return;
                 }
 
-                await AppUpdateService.markPrompted(update.version);
                 if (dialogContext.mounted) {
                   Navigator.of(dialogContext).pop();
                 }
@@ -150,6 +154,8 @@ class _SmartAgriAppState extends State<SmartAgriApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      navigatorKey: _navigatorKey,
+      scaffoldMessengerKey: _messengerKey,
       title: 'Smart Agriculture',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
