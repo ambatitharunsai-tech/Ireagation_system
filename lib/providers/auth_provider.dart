@@ -7,11 +7,14 @@ class AuthProvider extends ChangeNotifier {
   AppUser? _currentUser;
   bool _isLoading = true;
   String? _error;
+  bool _registrationRequiresEmailConfirmation = false;
 
   AppUser? get currentUser => _currentUser;
   bool get isLoading => _isLoading;
   bool get isAuthenticated => _currentUser != null;
   String? get error => _error;
+  bool get registrationRequiresEmailConfirmation =>
+      _registrationRequiresEmailConfirmation;
 
   AuthProvider() {
     _restoreSession();
@@ -57,11 +60,18 @@ class AuthProvider extends ChangeNotifier {
   Future<bool> register(String name, String email, String password) async {
     _isLoading = true;
     _error = null;
+    _registrationRequiresEmailConfirmation = false;
     notifyListeners();
 
     try {
       final user = await AuthService().register(name, email, password);
-      _currentUser = user;
+      if (user == null) {
+        // Signup succeeded, but email confirmation is required before login.
+        _currentUser = null;
+        _registrationRequiresEmailConfirmation = true;
+      } else {
+        _currentUser = user;
+      }
       _isLoading = false;
       notifyListeners();
       return true;
