@@ -33,7 +33,6 @@ jobs:
       - name: Install Dependencies
         run: flutter pub get
 
-      # The app loads .env at runtime, but CI must not commit private secrets.
       - name: Prepare local environment asset
         run: touch .env
 
@@ -42,10 +41,10 @@ jobs:
         run: |
           printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > android/app/upload-keystore.jks
           {
-            printf 'storePassword=%s\\n' "$ANDROID_KEYSTORE_PASSWORD"
-            printf 'keyPassword=%s\\n' "$ANDROID_KEY_PASSWORD"
-            printf 'keyAlias=%s\\n' "$ANDROID_KEY_ALIAS"
-            printf 'storeFile=app/upload-keystore.jks\\n'
+            printf '%s\n' "storePassword=$ANDROID_KEYSTORE_PASSWORD"
+            printf '%s\n' "keyPassword=$ANDROID_KEY_PASSWORD"
+            printf '%s\n' "keyAlias=$ANDROID_KEY_ALIAS"
+            printf '%s\n' "storeFile=app/upload-keystore.jks"
           } > android/key.properties
 
       - name: Format Code
@@ -58,10 +57,7 @@ jobs:
         run: flutter test
 
       - name: Build APK
-        run: |
-          flutter build apk --release \\
-            --build-name="1.0.${GITHUB_RUN_NUMBER}" \\
-            --build-number="${GITHUB_RUN_NUMBER}"
+        run: flutter build apk --release --build-name="1.0.${GITHUB_RUN_NUMBER}" --build-number="${GITHUB_RUN_NUMBER}"
 
       - name: Upload Android APK
         id: apk-upload
