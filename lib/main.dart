@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import 'config/supabase_config.dart';
 import 'providers/auth_provider.dart';
@@ -14,6 +15,7 @@ import 'providers/language_provider.dart';
 import 'providers/weather_provider.dart';
 import 'screens/dashboard/main_layout.dart';
 import 'screens/auth/login_screen.dart';
+import 'services/app_update_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -43,12 +45,117 @@ void main() async {
   );
 }
 
-class SmartAgriApp extends StatelessWidget {
+class SmartAgriApp extends StatefulWidget {
   const SmartAgriApp({super.key});
+
+  @override
+  State<SmartAgriApp> createState() => _SmartAgriAppState();
+}
+
+class _SmartAgriAppState extends State<SmartAgriApp> {
+  final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
+  final GlobalKey<ScaffoldMessengerState> _messengerKey =
+      GlobalKey<ScaffoldMessengerState>();
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkForAppUpdates();
+    });
+  }
+
+  Future<void> _checkForAppUpdates() async {
+    // Let the first screen settle before showing an update prompt.
+    await Future<void>.delayed(const Duration(seconds: 2));
+    if (!mounted) return;
+
+    final update = await AppUpdateService.checkForUpdate();
+    final navigatorContext = _navigatorKey.currentContext;
+    if (!mounted || update == null || navigatorContext == null) return;
+
+    await showDialog<void>(
+      context: navigatorContext,
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        final releaseNotes = update.releaseNotes.isEmpty
+            ? 'Performance improvements and bug fixes.'
+            : update.releaseNotes;
+
+        return AlertDialog(
+          icon: const Icon(Icons.system_update_alt_rounded, size: 34),
+          title: const Text('A new version is available'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Ireagation System ${update.version}',
+                  style: Theme.of(dialogContext).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                ),
+                const SizedBox(height: 12),
+                const Text(
+                  'Update now to get the latest improvements and features.',
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  releaseNotes,
+                  maxLines: 8,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () async {
+                await AppUpdateService.markPrompted(update.version);
+                if (dialogContext.mounted) {
+                  Navigator.of(dialogContext).pop();
+                }
+              },
+              child: const Text('Not now'),
+            ),
+            FilledButton.icon(
+              onPressed: () async {
+                final opened = await launchUrl(
+                  Uri.parse(update.downloadUrl),
+                  mode: LaunchMode.externalApplication,
+                );
+
+                if (!mounted) return;
+                if (!opened) {
+                  _messengerKey.currentState?.showSnackBar(
+                    const SnackBar(
+                      content: Text(
+                        'Could not open the download. Please try again later.',
+                      ),
+                    ),
+                  );
+                  return;
+                }
+
+                if (dialogContext.mounted) {
+                  Navigator.of(dialogContext).pop();
+                }
+              },
+              icon: const Icon(Icons.download_rounded),
+              label: const Text('Update now'),
+            ),
+          ],
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      navigatorKey: _navigatorKey,
+      scaffoldMessengerKey: _messengerKey,
       title: 'Smart Agriculture',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
