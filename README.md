@@ -50,7 +50,7 @@ Android only allows an APK to update an installed app when the package ID and si
    - `ANDROID_KEY_ALIAS`: `ireagation-release`
    - `ANDROID_KEY_PASSWORD`: the key password you chose
 4. Keep the keystore and passwords private. Never commit them or put them in source code.
-5. Push a new commit to `main`. CI will build, test, and publish a signed release. Subsequent releases will use the same key and can update that installation.
+5. Open **Actions → Flutter CI → Run workflow**, choose the `main` branch, and run it (or push a commit to `main`). CI will build, test, and publish a signed release. Subsequent releases will use the same key and can update that installation.
 
 **One-time migration:** the currently published v1.0.34 test APK was signed with a temporary CI debug key. The first permanent-key release cannot install over that build. Existing test users must uninstall the old APK once and install the first permanent-key release. Cloud data stored in Supabase is unaffected, but device-only app data may be removed by uninstalling.
 
