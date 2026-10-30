@@ -29,7 +29,7 @@ class AppUpdateService {
   /// Returns a newer public release, or null when no update is needed.
   /// Network failures are non-fatal and never block app startup.
   static Future<AppUpdate?> checkForUpdate() async {
-    if (kIsWeb) return null;
+    if (kIsWeb || !kReleaseMode || defaultTargetPlatform != TargetPlatform.android) {\n      return null;\n    }
 
     try {
       final preferences = await SharedPreferences.getInstance();
