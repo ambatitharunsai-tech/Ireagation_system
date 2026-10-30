@@ -41,7 +41,11 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
 
       if (mounted) {
         if (success) {
-          Navigator.pop(context);
+          if (auth.registrationRequiresEmailConfirmation) {
+            _showEmailConfirmationDialog();
+          } else {
+            Navigator.pop(context);
+          }
         } else if (auth.error != null) {
           final errorMsg = auth.error!;
           auth.clearError();
@@ -49,6 +53,37 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
         }
       }
     }
+  }
+
+  void _showEmailConfirmationDialog() {
+    final lang = Provider.of<LanguageProvider>(context, listen: false);
+    showDialog<void>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        icon: const Icon(
+          Icons.mark_email_read_outlined,
+          color: Color(0xFF2E7D32),
+          size: 48,
+        ),
+        title: Text(lang.t('Check your inbox')),
+        content: Text(
+          lang.t(
+            'If a new account can be created for this email, you will receive a confirmation link. If you already have an account, return to login.',
+          ),
+          textAlign: TextAlign.center,
+        ),
+        actions: [
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text(lang.t('Back to login')),
+          ),
+        ],
+      ),
+    ).then((_) {
+      // Return to the login route whether the dialog is closed by its button,
+      // the system back action, or a tap outside the dialog.
+      if (mounted) Navigator.pop(context);
+    });
   }
 
   void _showErrorDialog(String message) {

@@ -171,7 +171,6 @@ class _IotDashboardScreenState extends State<IotDashboardScreen>
         break;
       case MqttConnectionStateApp.DISCONNECTED:
       case MqttConnectionStateApp.ERROR:
-      default:
         c = Colors.redAccent;
         text = 'MQTT OFFLINE';
         break;

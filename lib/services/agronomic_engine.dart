@@ -1,6 +1,5 @@
 import '../models/crop_profile.dart';
 import 'weather_service.dart';
-import '../database/daos/crop_dao.dart';
 
 class AgronomicEngine {
   /// Calculates Growing Degree Days (GDD) for a single day
