@@ -68,19 +68,27 @@ class AuthService {
     return null;
   }
 
-  Future<AppUser> register(String name, String email, String password) async {
+  /// Creates the Auth user. A database trigger provisions the public profile,
+  /// so registration also works when email confirmation is enabled and no
+  /// authenticated client session is returned yet.
+  Future<AppUser?> register(String name, String email, String password) async {
+    final normalizedEmail = email.trim().toLowerCase();
     final response = await _supabase.auth.signUp(
-      email: email,
+      email: normalizedEmail,
       password: password,
+      data: {'name': name.trim()},
     );
 
-    final userId = response.user!.id;
+    final user = response.user;
+    if (user == null) {
+      throw StateError('Supabase did not return a user after registration.');
+    }
 
-    // Create profile
-    final profile = AppUser(id: userId, name: name, email: email);
-    await _supabase.from('profiles').insert(profile.toMap());
+    // With email confirmation enabled, Supabase creates the user but does not
+    // create a client session until the email is confirmed.
+    if (response.session == null) return null;
 
-    return profile;
+    return _fetchProfile(user.id, normalizedEmail);
   }
 
   Future<AppUser?> getCurrentUser() async {
