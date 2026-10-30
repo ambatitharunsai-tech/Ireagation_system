@@ -1,5 +1,3 @@
-import 'package:flutter/foundation.dart';
-
 enum DeviceState { LIVE, STALE, OFFLINE, UNKNOWN, ERROR }
 
 enum MqttConnectionStateApp {
