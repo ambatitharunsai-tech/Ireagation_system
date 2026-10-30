@@ -9,6 +9,11 @@ on:
 jobs:
   build:
     runs-on: ubuntu-26.04
+    env:
+      ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+      ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+      ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+      ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
 
     steps:
       - uses: actions/checkout@v7
@@ -32,6 +37,17 @@ jobs:
       - name: Prepare local environment asset
         run: touch .env
 
+      - name: Configure stable Android release signing
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && env.ANDROID_KEYSTORE_BASE64 != ''
+        run: |
+          printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > android/app/upload-keystore.jks
+          {
+            printf 'storePassword=%s\\n' "$ANDROID_KEYSTORE_PASSWORD"
+            printf 'keyPassword=%s\\n' "$ANDROID_KEY_PASSWORD"
+            printf 'keyAlias=%s\\n' "$ANDROID_KEY_ALIAS"
+            printf 'storeFile=app/upload-keystore.jks\\n'
+          } > android/key.properties
+
       - name: Format Code
         run: dart format .
 
@@ -42,7 +58,10 @@ jobs:
         run: flutter test
 
       - name: Build APK
-        run: flutter build apk --release
+        run: |
+          flutter build apk --release \\
+            --build-name="1.0.${GITHUB_RUN_NUMBER}" \\
+            --build-number="${GITHUB_RUN_NUMBER}"
 
       - name: Upload Android APK
         id: apk-upload
@@ -56,7 +75,7 @@ jobs:
       - name: Publish APK download link
         if: success()
         run: |
-          echo '## Android APK' >> "$GITHUB_STEP_SUMMARY"
+          echo '## Android APK (CI artifact)' >> "$GITHUB_STEP_SUMMARY"
           echo "[Download Ireagation System APK](${{ steps.apk-upload.outputs.artifact-url }})" >> "$GITHUB_STEP_SUMMARY"
           echo "SHA-256: $(shasum -a 256 build/app/outputs/flutter-apk/app-release.apk | cut -d ' ' -f 1)" >> "$GITHUB_STEP_SUMMARY"
 
@@ -68,8 +87,18 @@ jobs:
     permissions:
       actions: read
       contents: write
+    env:
+      ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+
     steps:
-      - name: Download APK artifact
+      - name: Explain missing release signing key
+        if: env.ANDROID_KEYSTORE_BASE64 == ''
+        run: |
+          echo '## Public release not published' >> "$GITHUB_STEP_SUMMARY"
+          echo 'Add the four Android signing repository secrets described in README.md, then push a new commit to main to publish an update-safe APK.' >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Download signed APK artifact
+        if: env.ANDROID_KEYSTORE_BASE64 != ''
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
@@ -78,13 +107,14 @@ jobs:
           gh run download "$GITHUB_RUN_ID" --name "Ireagation-System-Android-APK" --dir dist
 
       - name: Publish GitHub Release
+        if: env.ANDROID_KEYSTORE_BASE64 != ''
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
         run: |
           TAG="android-v1.0.${GITHUB_RUN_NUMBER}"
           TITLE="Ireagation System Android v1.0.${GITHUB_RUN_NUMBER}"
-          NOTES="Android testing build for Ireagation System. Install the APK on an Android device. This build uses the repository's current debug signing configuration and is intended for direct testing, not Google Play distribution. If Android reports a signature conflict when updating, uninstall the previous test build first."
+          NOTES="Public Android release. Includes in-app update checking. Download the APK and confirm installation when Android prompts. Version 1.0.${GITHUB_RUN_NUMBER}."
           if gh release view "$TAG" >/dev/null 2>&1; then
             gh release upload "$TAG" dist/app-release.apk --clobber
             gh release edit "$TAG" --title "$TITLE" --notes "$NOTES" --latest
